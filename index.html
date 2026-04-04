@@ -1,850 +1,834 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.7">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emir · Command Centre</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0e0e0e;
+  --surface: #161616;
+  --surface2: #1e1e1e;
+  --surface3: #252525;
+  --border: #2a2a2a;
+  --border2: #333;
+  --ink: #f0ece6;
+  --ink2: #a09890;
+  --ink3: #606060;
+  --gold: #c9a84c;
+  --gold-dim: #7a6030;
+  --gold-bg: #1a1508;
+  --green: #4a9a6a;
+  --green-dim: #2a5a3a;
+  --green-bg: #0a1510;
+  --red: #c05050;
+  --red-dim: #6a2a2a;
+  --red-bg: #150a0a;
+  --blue: #4a7ac0;
+  --blue-dim: #2a3a6a;
+  --blue-bg: #080e1a;
+  --amber: #d4843a;
+  --amber-bg: #150e05;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; font-weight:300; min-height:100vh; }
+
+/* ── LOADING ── */
+.loading-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:16px; }
+.loading-text { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); }
+.spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ── LOGIN ── */
+#loginScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); }
+.login-box { width:380px; max-width:calc(100vw - 40px); padding:48px 40px; background:var(--surface); border:1px solid var(--border); }
+.login-top { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; }
+.login-box h2 { font-family:'Fraunces',serif; font-weight:300; font-size:2rem; line-height:1.1; margin-bottom:8px; }
+.login-box p { font-size:0.78rem; color:var(--ink2); margin-bottom:32px; line-height:1.6; }
+.login-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:8px; }
+.user-options { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }
+.user-btn { padding:12px 16px; background:var(--surface2); border:1px solid var(--border); color:var(--ink2); font-family:'DM Sans',sans-serif; font-size:0.84rem; cursor:pointer; text-align:left; transition:all 0.15s; display:flex; align-items:center; gap:10px; }
+.user-btn:hover { background:var(--surface3); border-color:var(--border2); color:var(--ink); }
+.user-btn.selected { background:var(--gold-bg); border-color:var(--gold-dim); color:var(--gold); }
+.user-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:500; font-family:'DM Mono',monospace; flex-shrink:0; }
+.pin-input { width:100%; padding:12px 14px; background:var(--surface2); border:1px solid var(--border); color:var(--ink); font-family:'DM Mono',monospace; font-size:1.2rem; letter-spacing:0.3em; outline:none; transition:border-color 0.15s; margin-bottom:20px; -webkit-text-security:disc; text-security:disc; }
+.pin-input:focus { border-color:var(--gold); }
+.login-btn { width:100%; padding:13px; background:var(--gold); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; transition:opacity 0.15s; font-weight:500; }
+.login-btn:hover { opacity:0.9; }
+.login-error { font-size:0.72rem; color:var(--red); margin-top:10px; text-align:center; display:none; }
+
+/* ── APP ── */
+#app { display:none; }
+.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; height:52px; position:sticky; top:0; z-index:100; }
+.logo { font-family:'Fraunces',serif; font-weight:300; font-size:1.1rem; }
+.logo em { font-style:italic; color:var(--gold); }
+.nav-tabs { display:flex; height:52px; }
+.nav-tab { background:none; border:none; border-bottom:2px solid transparent; padding:0 16px; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink3); cursor:pointer; transition:all 0.15s; white-space:nowrap; }
+.nav-tab.active { color:var(--gold); border-bottom-color:var(--gold); }
+.nav-tab:hover:not(.active) { color:var(--ink2); }
+.topbar-right { display:flex; align-items:center; gap:12px; }
+.user-chip { display:flex; align-items:center; gap:8px; padding:5px 10px; background:var(--surface2); border:1px solid var(--border); font-size:0.74rem; color:var(--ink2); }
+.logout-btn { background:none; border:none; color:var(--ink3); cursor:pointer; font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; padding:5px 8px; transition:color 0.15s; }
+.logout-btn:hover { color:var(--red); }
+
+/* ── PAGES ── */
+.page { display:none; padding:28px; max-width:960px; margin:0 auto; }
+.page.active { display:block; }
+
+/* ── TODAY ── */
+.day-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:16px; }
+.day-title { font-family:'Fraunces',serif; font-weight:300; font-size:1.6rem; }
+.day-title em { font-style:italic; color:var(--gold); }
+.day-date { font-family:'DM Mono',monospace; font-size:0.6rem; color:var(--ink3); letter-spacing:0.12em; text-transform:uppercase; margin-top:4px; }
+.big-num { font-family:'Fraunces',serif; font-weight:300; font-size:3rem; color:var(--gold); line-height:1; }
+.big-label { font-family:'DM Mono',monospace; font-size:0.5rem; color:var(--ink3); letter-spacing:0.12em; text-transform:uppercase; margin-top:2px; }
+.main-prog { height:2px; background:var(--border); margin-top:6px; width:120px; margin-left:auto; }
+.main-prog-fill { height:100%; background:var(--gold); transition:width 0.4s; }
+.bucket-row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:28px; }
+.b-pill { background:var(--surface); border:1px solid var(--border); padding:12px 10px; text-align:center; }
+.b-pill-icon { font-size:1.1rem; display:block; margin-bottom:5px; }
+.b-pill-name { font-family:'DM Mono',monospace; font-size:0.45rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:6px; }
+.b-pill-bar { height:2px; background:var(--border); overflow:hidden; margin-bottom:4px; }
+.b-pill-fill { height:100%; transition:width 0.4s; }
+.b-pill-frac { font-family:'DM Mono',monospace; font-size:0.5rem; display:block; }
+.section { margin-bottom:24px; }
+.section-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.section-lbl { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); }
+.section-ct { font-family:'DM Mono',monospace; font-size:0.55rem; color:var(--ink3); }
+.chk-item { display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--surface); border:1px solid var(--border); margin-bottom:3px; cursor:pointer; transition:all 0.15s; user-select:none; }
+.chk-item:hover { background:var(--surface2); }
+.chk-item.done { opacity:0.4; }
+.chk-box { width:16px; height:16px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; border-radius:2px; }
+.chk-box svg { width:9px; height:9px; opacity:0; transition:opacity 0.15s; }
+.chk-item.done .chk-box { background:var(--green); border-color:var(--green); }
+.chk-item.done .chk-box svg { opacity:1; }
+.chk-item.done .chk-label { text-decoration:line-through; text-decoration-color:var(--ink3); color:var(--ink3); }
+.chk-label { font-size:0.82rem; color:var(--ink2); flex:1; line-height:1.3; }
+.chk-tag { font-family:'DM Mono',monospace; font-size:0.48rem; letter-spacing:0.08em; text-transform:uppercase; padding:2px 6px; border-radius:2px; flex-shrink:0; }
+
+/* ── TASK BOARD ── */
+.board-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+.board-title { font-family:'Fraunces',serif; font-weight:300; font-size:1.5rem; }
+.board-title em { font-style:italic; color:var(--gold); }
+.board-subtitle { font-size:0.72rem; color:var(--ink3); margin-top:4px; }
+.board-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.filter-select { padding:7px 12px; background:var(--surface); border:1px solid var(--border); color:var(--ink2); font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.08em; outline:none; cursor:pointer; border-radius:2px; }
+.new-task-btn { padding:8px 16px; background:var(--gold); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:opacity 0.15s; border-radius:2px; }
+.new-task-btn:hover { opacity:0.85; }
+.task-table-wrap { overflow-x:auto; }
+.task-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+.task-table th { font-family:'DM Mono',monospace; font-size:0.52rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink3); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border); white-space:nowrap; }
+.task-table td { padding:12px 12px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--ink2); font-size:0.8rem; }
+.task-table tr:hover td { background:var(--surface2); }
+.task-table tr.task-done td { opacity:0.4; }
+.task-table tr.task-done .task-name-cell { text-decoration:line-through; text-decoration-color:var(--ink3); }
+.task-name-cell { color:var(--ink); font-size:0.83rem; min-width:180px; line-height:1.4; }
+.priority-badge { font-family:'DM Mono',monospace; font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase; padding:2px 7px; border-radius:2px; display:inline-block; }
+.p-high { background:var(--red-bg); color:var(--red); border:1px solid var(--red-dim); }
+.p-medium { background:var(--amber-bg); color:var(--amber); border:1px solid #5a3a10; }
+.p-low { background:var(--green-bg); color:var(--green); border:1px solid var(--green-dim); }
+.status-badge { font-family:'DM Mono',monospace; font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase; padding:3px 8px; border-radius:2px; display:inline-block; cursor:pointer; border:1px solid transparent; }
+.s-todo { background:var(--surface3); color:var(--ink3); border-color:var(--border2); }
+.s-inprogress { background:var(--blue-bg); color:var(--blue); border-color:var(--blue-dim); }
+.s-done { background:var(--green-bg); color:var(--green); border-color:var(--green-dim); }
+.deadline-cell { font-family:'DM Mono',monospace; font-size:0.6rem; white-space:nowrap; }
+.deadline-overdue { color:var(--red); }
+.deadline-soon { color:var(--amber); }
+.deadline-ok { color:var(--ink3); }
+.assignee-chip { display:inline-flex; align-items:center; gap:5px; font-size:0.72rem; color:var(--ink2); }
+.mini-avatar { width:20px; height:20px; border-radius:50%; font-family:'DM Mono',monospace; font-size:0.5rem; font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.task-actions { display:flex; gap:4px; opacity:0; transition:opacity 0.15s; }
+.task-table tr:hover .task-actions { opacity:1; }
+.icon-btn { background:none; border:1px solid var(--border); color:var(--ink3); cursor:pointer; padding:3px 6px; font-size:0.65rem; transition:all 0.15s; border-radius:2px; }
+.icon-btn:hover { background:var(--surface3); color:var(--ink); border-color:var(--border2); }
+.icon-btn.del:hover { color:var(--red); border-color:var(--red-dim); }
+.empty-board { padding:48px; text-align:center; color:var(--ink3); font-size:0.8rem; font-style:italic; border:1px dashed var(--border); margin-top:8px; }
+
+/* ── MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }
+.modal { background:var(--surface); border:1px solid var(--border2); width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:32px; }
+.modal-title { font-family:'Fraunces',serif; font-weight:300; font-size:1.3rem; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }
+.modal-close { background:none; border:none; color:var(--ink3); cursor:pointer; font-size:1.2rem; line-height:1; transition:color 0.15s; }
+.modal-close:hover { color:var(--ink); }
+.form-group { margin-bottom:16px; }
+.form-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:6px; }
+.form-input,.form-select,.form-textarea { width:100%; padding:10px 12px; background:var(--surface2); border:1px solid var(--border); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:300; outline:none; transition:border-color 0.15s; border-radius:2px; }
+.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--gold); }
+.form-textarea { resize:vertical; min-height:80px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:24px; }
+.btn-cancel { padding:10px 20px; background:none; border:1px solid var(--border2); color:var(--ink2); font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; border-radius:2px; }
+.btn-cancel:hover { background:var(--surface2); }
+.btn-save { padding:10px 20px; background:var(--gold); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:opacity 0.15s; border-radius:2px; }
+.btn-save:hover { opacity:0.85; }
+.comments-section { margin-top:20px; border-top:1px solid var(--border); padding-top:16px; }
+.comment-item { padding:10px; background:var(--surface2); border:1px solid var(--border); margin-bottom:6px; border-radius:2px; }
+.comment-meta { display:flex; gap:8px; align-items:center; margin-bottom:4px; }
+.comment-author { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; }
+.comment-time { font-size:0.62rem; color:var(--ink3); }
+.comment-text { font-size:0.78rem; color:var(--ink2); line-height:1.5; }
+.comment-input-row { display:flex; gap:8px; margin-top:10px; }
+.comment-input { flex:1; padding:8px 12px; background:var(--surface2); border:1px solid var(--border); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:0.78rem; outline:none; border-radius:2px; }
+.comment-input:focus { border-color:var(--gold); }
+.comment-send { padding:8px 14px; background:var(--surface3); border:1px solid var(--border2); color:var(--ink2); font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; border-radius:2px; }
+.comment-send:hover { background:var(--gold); color:var(--bg); border-color:var(--gold); }
+
+/* ── STREAK ── */
+.streak-grid { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:20px; }
+.s-day { width:36px; height:36px; background:var(--surface); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:0.45rem; color:var(--ink3); cursor:pointer; transition:all 0.15s; gap:2px; border-radius:2px; }
+.s-day.complete { background:var(--green-bg); border-color:var(--green-dim); color:var(--green); }
+.s-day.today { border-color:var(--gold); color:var(--gold); }
+.s-day.complete.today { border-color:var(--green); }
+.s-day-num { font-size:0.75rem; font-weight:500; }
+
+/* ── JPC ONLY BANNER ── */
+.access-banner { background:var(--gold-bg); border:1px solid var(--gold-dim); padding:16px 20px; margin-bottom:24px; display:flex; align-items:center; gap:12px; }
+.access-banner-icon { font-size:1.2rem; }
+.access-banner-text { font-size:0.78rem; color:var(--ink2); line-height:1.5; }
+.access-banner-text strong { color:var(--gold); font-weight:500; }
+
+@media (max-width:680px) {
+  .page { padding:16px; }
+  .bucket-row { grid-template-columns:repeat(3,1fr); }
+  .topbar { padding:0 16px; }
+  .nav-tab { padding:0 10px; font-size:0.52rem; }
+  .form-row { grid-template-columns:1fr; }
+}
+</style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="en"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1">&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1">&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1">&lt;title&gt;Emir · Command Centre&lt;/title&gt;</p>
-<p class="p1">&lt;link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&amp;family=DM+Mono:wght@300;400;500&amp;family=DM+Sans:wght@300;400;500&amp;display=swap" rel="stylesheet"&gt;</p>
-<p class="p1">&lt;style&gt;</p>
-<p class="p1">:root {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--bg: #0e0e0e;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--surface: #161616;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--surface2: #1e1e1e;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--surface3: #252525;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--border: #2a2a2a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--border2: #333;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--ink: #f0ece6;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--ink2: #a09890;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--ink3: #606060;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--gold: #c9a84c;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--gold-dim: #7a6030;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--gold-bg: #1a1508;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--green: #4a9a6a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--green-dim: #2a5a3a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--green-bg: #0a1510;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--red: #c05050;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--red-dim: #6a2a2a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--red-bg: #150a0a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--blue: #4a7ac0;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--blue-dim: #2a3a6a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--blue-bg: #080e1a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--amber: #d4843a;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>--amber-bg: #150e05;</p>
-<p class="p1">}</p>
-<p class="p1">* { margin:0; padding:0; box-sizing:border-box; }</p>
-<p class="p1">body { background:var(--bg); color:var(--ink); font-family:'DM Sans',sans-serif; font-weight:300; min-height:100vh; }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── LOADING ── */</p>
-<p class="p1">.loading-overlay { position:fixed; inset:0; background:var(--bg); display:flex; align-items:center; justify-content:center; z-index:999; flex-direction:column; gap:16px; }</p>
-<p class="p1">.loading-text { font-family:'DM Mono',monospace; font-size:0.6rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); }</p>
-<p class="p1">.spinner { width:24px; height:24px; border:2px solid var(--border); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }</p>
-<p class="p1">@keyframes spin { to { transform:rotate(360deg); } }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── LOGIN ── */</p>
-<p class="p1">#loginScreen { min-height:100vh; display:flex; align-items:center; justify-content:center; background:var(--bg); }</p>
-<p class="p1">.login-box { width:380px; max-width:calc(100vw - 40px); padding:48px 40px; background:var(--surface); border:1px solid var(--border); }</p>
-<p class="p1">.login-top { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.2em; text-transform:uppercase; color:var(--gold); margin-bottom:20px; }</p>
-<p class="p1">.login-box h2 { font-family:'Fraunces',serif; font-weight:300; font-size:2rem; line-height:1.1; margin-bottom:8px; }</p>
-<p class="p1">.login-box p { font-size:0.78rem; color:var(--ink2); margin-bottom:32px; line-height:1.6; }</p>
-<p class="p1">.login-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:8px; }</p>
-<p class="p1">.user-options { display:flex; flex-direction:column; gap:6px; margin-bottom:20px; }</p>
-<p class="p1">.user-btn { padding:12px 16px; background:var(--surface2); border:1px solid var(--border); color:var(--ink2); font-family:'DM Sans',sans-serif; font-size:0.84rem; cursor:pointer; text-align:left; transition:all 0.15s; display:flex; align-items:center; gap:10px; }</p>
-<p class="p1">.user-btn:hover { background:var(--surface3); border-color:var(--border2); color:var(--ink); }</p>
-<p class="p1">.user-btn.selected { background:var(--gold-bg); border-color:var(--gold-dim); color:var(--gold); }</p>
-<p class="p1">.user-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:500; font-family:'DM Mono',monospace; flex-shrink:0; }</p>
-<p class="p1">.pin-input { width:100%; padding:12px 14px; background:var(--surface2); border:1px solid var(--border); color:var(--ink); font-family:'DM Mono',monospace; font-size:1.2rem; letter-spacing:0.3em; outline:none; transition:border-color 0.15s; margin-bottom:20px; -webkit-text-security:disc; text-security:disc; }</p>
-<p class="p1">.pin-input:focus { border-color:var(--gold); }</p>
-<p class="p1">.login-btn { width:100%; padding:13px; background:var(--gold); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:0.65rem; letter-spacing:0.15em; text-transform:uppercase; cursor:pointer; transition:opacity 0.15s; font-weight:500; }</p>
-<p class="p1">.login-btn:hover { opacity:0.9; }</p>
-<p class="p1">.login-error { font-size:0.72rem; color:var(--red); margin-top:10px; text-align:center; display:none; }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── APP ── */</p>
-<p class="p1">#app { display:none; }</p>
-<p class="p1">.topbar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 28px; display:flex; align-items:center; justify-content:space-between; height:52px; position:sticky; top:0; z-index:100; }</p>
-<p class="p1">.logo { font-family:'Fraunces',serif; font-weight:300; font-size:1.1rem; }</p>
-<p class="p1">.logo em { font-style:italic; color:var(--gold); }</p>
-<p class="p1">.nav-tabs { display:flex; height:52px; }</p>
-<p class="p1">.nav-tab { background:none; border:none; border-bottom:2px solid transparent; padding:0 16px; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink3); cursor:pointer; transition:all 0.15s; white-space:nowrap; }</p>
-<p class="p1">.nav-tab.active { color:var(--gold); border-bottom-color:var(--gold); }</p>
-<p class="p1">.nav-tab:hover:not(.active) { color:var(--ink2); }</p>
-<p class="p1">.topbar-right { display:flex; align-items:center; gap:12px; }</p>
-<p class="p1">.user-chip { display:flex; align-items:center; gap:8px; padding:5px 10px; background:var(--surface2); border:1px solid var(--border); font-size:0.74rem; color:var(--ink2); }</p>
-<p class="p1">.logout-btn { background:none; border:none; color:var(--ink3); cursor:pointer; font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.1em; text-transform:uppercase; padding:5px 8px; transition:color 0.15s; }</p>
-<p class="p1">.logout-btn:hover { color:var(--red); }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── PAGES ── */</p>
-<p class="p1">.page { display:none; padding:28px; max-width:960px; margin:0 auto; }</p>
-<p class="p1">.page.active { display:block; }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── TODAY ── */</p>
-<p class="p1">.day-header { display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:28px; flex-wrap:wrap; gap:16px; }</p>
-<p class="p1">.day-title { font-family:'Fraunces',serif; font-weight:300; font-size:1.6rem; }</p>
-<p class="p1">.day-title em { font-style:italic; color:var(--gold); }</p>
-<p class="p1">.day-date { font-family:'DM Mono',monospace; font-size:0.6rem; color:var(--ink3); letter-spacing:0.12em; text-transform:uppercase; margin-top:4px; }</p>
-<p class="p1">.big-num { font-family:'Fraunces',serif; font-weight:300; font-size:3rem; color:var(--gold); line-height:1; }</p>
-<p class="p1">.big-label { font-family:'DM Mono',monospace; font-size:0.5rem; color:var(--ink3); letter-spacing:0.12em; text-transform:uppercase; margin-top:2px; }</p>
-<p class="p1">.main-prog { height:2px; background:var(--border); margin-top:6px; width:120px; margin-left:auto; }</p>
-<p class="p1">.main-prog-fill { height:100%; background:var(--gold); transition:width 0.4s; }</p>
-<p class="p1">.bucket-row { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:28px; }</p>
-<p class="p1">.b-pill { background:var(--surface); border:1px solid var(--border); padding:12px 10px; text-align:center; }</p>
-<p class="p1">.b-pill-icon { font-size:1.1rem; display:block; margin-bottom:5px; }</p>
-<p class="p1">.b-pill-name { font-family:'DM Mono',monospace; font-size:0.45rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:6px; }</p>
-<p class="p1">.b-pill-bar { height:2px; background:var(--border); overflow:hidden; margin-bottom:4px; }</p>
-<p class="p1">.b-pill-fill { height:100%; transition:width 0.4s; }</p>
-<p class="p1">.b-pill-frac { font-family:'DM Mono',monospace; font-size:0.5rem; display:block; }</p>
-<p class="p1">.section { margin-bottom:24px; }</p>
-<p class="p1">.section-hd { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }</p>
-<p class="p1">.section-lbl { font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--ink3); }</p>
-<p class="p1">.section-ct { font-family:'DM Mono',monospace; font-size:0.55rem; color:var(--ink3); }</p>
-<p class="p1">.chk-item { display:flex; align-items:center; gap:12px; padding:11px 14px; background:var(--surface); border:1px solid var(--border); margin-bottom:3px; cursor:pointer; transition:all 0.15s; user-select:none; }</p>
-<p class="p1">.chk-item:hover { background:var(--surface2); }</p>
-<p class="p1">.chk-item.done { opacity:0.4; }</p>
-<p class="p1">.chk-box { width:16px; height:16px; border:1.5px solid var(--border2); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; border-radius:2px; }</p>
-<p class="p1">.chk-box svg { width:9px; height:9px; opacity:0; transition:opacity 0.15s; }</p>
-<p class="p1">.chk-item.done .chk-box { background:var(--green); border-color:var(--green); }</p>
-<p class="p1">.chk-item.done .chk-box svg { opacity:1; }</p>
-<p class="p1">.chk-item.done .chk-label { text-decoration:line-through; text-decoration-color:var(--ink3); color:var(--ink3); }</p>
-<p class="p1">.chk-label { font-size:0.82rem; color:var(--ink2); flex:1; line-height:1.3; }</p>
-<p class="p1">.chk-tag { font-family:'DM Mono',monospace; font-size:0.48rem; letter-spacing:0.08em; text-transform:uppercase; padding:2px 6px; border-radius:2px; flex-shrink:0; }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── TASK BOARD ── */</p>
-<p class="p1">.board-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }</p>
-<p class="p1">.board-title { font-family:'Fraunces',serif; font-weight:300; font-size:1.5rem; }</p>
-<p class="p1">.board-title em { font-style:italic; color:var(--gold); }</p>
-<p class="p1">.board-subtitle { font-size:0.72rem; color:var(--ink3); margin-top:4px; }</p>
-<p class="p1">.board-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }</p>
-<p class="p1">.filter-select { padding:7px 12px; background:var(--surface); border:1px solid var(--border); color:var(--ink2); font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.08em; outline:none; cursor:pointer; border-radius:2px; }</p>
-<p class="p1">.new-task-btn { padding:8px 16px; background:var(--gold); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.12em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:opacity 0.15s; border-radius:2px; }</p>
-<p class="p1">.new-task-btn:hover { opacity:0.85; }</p>
-<p class="p1">.task-table-wrap { overflow-x:auto; }</p>
-<p class="p1">.task-table { width:100%; border-collapse:collapse; font-size:0.8rem; }</p>
-<p class="p1">.task-table th { font-family:'DM Mono',monospace; font-size:0.52rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink3); text-align:left; padding:8px 12px; border-bottom:1px solid var(--border); white-space:nowrap; }</p>
-<p class="p1">.task-table td { padding:12px 12px; border-bottom:1px solid var(--border); vertical-align:top; color:var(--ink2); font-size:0.8rem; }</p>
-<p class="p1">.task-table tr:hover td { background:var(--surface2); }</p>
-<p class="p1">.task-table tr.task-done td { opacity:0.4; }</p>
-<p class="p1">.task-table tr.task-done .task-name-cell { text-decoration:line-through; text-decoration-color:var(--ink3); }</p>
-<p class="p1">.task-name-cell { color:var(--ink); font-size:0.83rem; min-width:180px; line-height:1.4; }</p>
-<p class="p1">.priority-badge { font-family:'DM Mono',monospace; font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase; padding:2px 7px; border-radius:2px; display:inline-block; }</p>
-<p class="p1">.p-high { background:var(--red-bg); color:var(--red); border:1px solid var(--red-dim); }</p>
-<p class="p1">.p-medium { background:var(--amber-bg); color:var(--amber); border:1px solid #5a3a10; }</p>
-<p class="p1">.p-low { background:var(--green-bg); color:var(--green); border:1px solid var(--green-dim); }</p>
-<p class="p1">.status-badge { font-family:'DM Mono',monospace; font-size:0.5rem; letter-spacing:0.08em; text-transform:uppercase; padding:3px 8px; border-radius:2px; display:inline-block; cursor:pointer; border:1px solid transparent; }</p>
-<p class="p1">.s-todo { background:var(--surface3); color:var(--ink3); border-color:var(--border2); }</p>
-<p class="p1">.s-inprogress { background:var(--blue-bg); color:var(--blue); border-color:var(--blue-dim); }</p>
-<p class="p1">.s-done { background:var(--green-bg); color:var(--green); border-color:var(--green-dim); }</p>
-<p class="p1">.deadline-cell { font-family:'DM Mono',monospace; font-size:0.6rem; white-space:nowrap; }</p>
-<p class="p1">.deadline-overdue { color:var(--red); }</p>
-<p class="p1">.deadline-soon { color:var(--amber); }</p>
-<p class="p1">.deadline-ok { color:var(--ink3); }</p>
-<p class="p1">.assignee-chip { display:inline-flex; align-items:center; gap:5px; font-size:0.72rem; color:var(--ink2); }</p>
-<p class="p1">.mini-avatar { width:20px; height:20px; border-radius:50%; font-family:'DM Mono',monospace; font-size:0.5rem; font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0; }</p>
-<p class="p1">.task-actions { display:flex; gap:4px; opacity:0; transition:opacity 0.15s; }</p>
-<p class="p1">.task-table tr:hover .task-actions { opacity:1; }</p>
-<p class="p1">.icon-btn { background:none; border:1px solid var(--border); color:var(--ink3); cursor:pointer; padding:3px 6px; font-size:0.65rem; transition:all 0.15s; border-radius:2px; }</p>
-<p class="p1">.icon-btn:hover { background:var(--surface3); color:var(--ink); border-color:var(--border2); }</p>
-<p class="p1">.icon-btn.del:hover { color:var(--red); border-color:var(--red-dim); }</p>
-<p class="p1">.empty-board { padding:48px; text-align:center; color:var(--ink3); font-size:0.8rem; font-style:italic; border:1px dashed var(--border); margin-top:8px; }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── MODAL ── */</p>
-<p class="p1">.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:500; display:flex; align-items:center; justify-content:center; padding:20px; }</p>
-<p class="p1">.modal { background:var(--surface); border:1px solid var(--border2); width:100%; max-width:520px; max-height:90vh; overflow-y:auto; padding:32px; }</p>
-<p class="p1">.modal-title { font-family:'Fraunces',serif; font-weight:300; font-size:1.3rem; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; }</p>
-<p class="p1">.modal-close { background:none; border:none; color:var(--ink3); cursor:pointer; font-size:1.2rem; line-height:1; transition:color 0.15s; }</p>
-<p class="p1">.modal-close:hover { color:var(--ink); }</p>
-<p class="p1">.form-group { margin-bottom:16px; }</p>
-<p class="p1">.form-label { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink3); display:block; margin-bottom:6px; }</p>
-<p class="p1">.form-input,.form-select,.form-textarea { width:100%; padding:10px 12px; background:var(--surface2); border:1px solid var(--border); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:300; outline:none; transition:border-color 0.15s; border-radius:2px; }</p>
-<p class="p1">.form-input:focus,.form-select:focus,.form-textarea:focus { border-color:var(--gold); }</p>
-<p class="p1">.form-textarea { resize:vertical; min-height:80px; }</p>
-<p class="p1">.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }</p>
-<p class="p1">.modal-actions { display:flex; gap:8px; justify-content:flex-end; margin-top:24px; }</p>
-<p class="p1">.btn-cancel { padding:10px 20px; background:none; border:1px solid var(--border2); color:var(--ink2); font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; border-radius:2px; }</p>
-<p class="p1">.btn-cancel:hover { background:var(--surface2); }</p>
-<p class="p1">.btn-save { padding:10px 20px; background:var(--gold); color:var(--bg); border:none; font-family:'DM Mono',monospace; font-size:0.58rem; letter-spacing:0.1em; text-transform:uppercase; cursor:pointer; font-weight:500; transition:opacity 0.15s; border-radius:2px; }</p>
-<p class="p1">.btn-save:hover { opacity:0.85; }</p>
-<p class="p1">.comments-section { margin-top:20px; border-top:1px solid var(--border); padding-top:16px; }</p>
-<p class="p1">.comment-item { padding:10px; background:var(--surface2); border:1px solid var(--border); margin-bottom:6px; border-radius:2px; }</p>
-<p class="p1">.comment-meta { display:flex; gap:8px; align-items:center; margin-bottom:4px; }</p>
-<p class="p1">.comment-author { font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; }</p>
-<p class="p1">.comment-time { font-size:0.62rem; color:var(--ink3); }</p>
-<p class="p1">.comment-text { font-size:0.78rem; color:var(--ink2); line-height:1.5; }</p>
-<p class="p1">.comment-input-row { display:flex; gap:8px; margin-top:10px; }</p>
-<p class="p1">.comment-input { flex:1; padding:8px 12px; background:var(--surface2); border:1px solid var(--border); color:var(--ink); font-family:'DM Sans',sans-serif; font-size:0.78rem; outline:none; border-radius:2px; }</p>
-<p class="p1">.comment-input:focus { border-color:var(--gold); }</p>
-<p class="p1">.comment-send { padding:8px 14px; background:var(--surface3); border:1px solid var(--border2); color:var(--ink2); font-family:'DM Mono',monospace; font-size:0.55rem; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:all 0.15s; border-radius:2px; }</p>
-<p class="p1">.comment-send:hover { background:var(--gold); color:var(--bg); border-color:var(--gold); }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── STREAK ── */</p>
-<p class="p1">.streak-grid { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:20px; }</p>
-<p class="p1">.s-day { width:36px; height:36px; background:var(--surface); border:1px solid var(--border); display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:0.45rem; color:var(--ink3); cursor:pointer; transition:all 0.15s; gap:2px; border-radius:2px; }</p>
-<p class="p1">.s-day.complete { background:var(--green-bg); border-color:var(--green-dim); color:var(--green); }</p>
-<p class="p1">.s-day.today { border-color:var(--gold); color:var(--gold); }</p>
-<p class="p1">.s-day.complete.today { border-color:var(--green); }</p>
-<p class="p1">.s-day-num { font-size:0.75rem; font-weight:500; }</p>
-<p class="p2"><br></p>
-<p class="p1">/* ── JPC ONLY BANNER ── */</p>
-<p class="p1">.access-banner { background:var(--gold-bg); border:1px solid var(--gold-dim); padding:16px 20px; margin-bottom:24px; display:flex; align-items:center; gap:12px; }</p>
-<p class="p1">.access-banner-icon { font-size:1.2rem; }</p>
-<p class="p1">.access-banner-text { font-size:0.78rem; color:var(--ink2); line-height:1.5; }</p>
-<p class="p1">.access-banner-text strong { color:var(--gold); font-weight:500; }</p>
-<p class="p2"><br></p>
-<p class="p1">@media (max-width:680px) {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>.page { padding:16px; }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>.bucket-row { grid-template-columns:repeat(3,1fr); }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>.topbar { padding:0 16px; }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>.nav-tab { padding:0 10px; font-size:0.52rem; }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>.form-row { grid-template-columns:1fr; }</p>
-<p class="p1">}</p>
-<p class="p1">&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="loading-overlay" id="loadingOverlay"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="spinner"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="loading-text"&gt;Loading...&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div id="loginScreen" style="display:none"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="login-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="login-top"&gt;JPC · Command Centre&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h2&gt;Welcome back&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;p&gt;Select your name and enter your PIN to continue.&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="login-label"&gt;Who are you?&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="user-options" id="userOptions"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;span class="login-label"&gt;PIN&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;input class="pin-input" id="pinInput" type="password" maxlength="4" placeholder="••••" inputmode="numeric" onkeydown="if(event.key==='Enter') doLogin()"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;button class="login-btn" onclick="doLogin()"&gt;Enter →&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="login-error" id="loginError"&gt;Incorrect PIN. Try again.&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div id="app"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="topbar"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="display:flex; align-items:center; gap:20px;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="logo"&gt;JPC &lt;em&gt;Command&lt;/em&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="nav-tabs" id="navTabs"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="topbar-right"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="user-chip"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="mini-avatar" id="topbarAvatar"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;span id="topbarName" style="font-size:0.74rem"&gt;&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="logout-btn" onclick="doLogout()"&gt;Sign out&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- TODAY (Emir only) --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="page-today" class="page"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="day-header"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="day-title"&gt;Good &lt;em id="timeOfDay"&gt;morning&lt;/em&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="day-date" id="dayDate"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div style="text-align:right"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="big-num" id="bigPct"&gt;0%&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="big-label"&gt;Today's Progress&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="main-prog"&gt;&lt;div class="main-prog-fill" id="mainProg" style="width:0%"&gt;&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="bucket-row" id="bucketRow"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div id="checkSections"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- JPC (everyone) --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="page-jpc" class="page"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="board-header"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="board-title"&gt;JPC &lt;em&gt;Task Board&lt;/em&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="board-subtitle" id="jpcSubtitle"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="board-actions"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select class="filter-select" id="jpc-filter-person" onchange="renderBoard('jpc')"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value=""&gt;All members&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select class="filter-select" id="jpc-filter-status" onchange="renderBoard('jpc')"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value=""&gt;All statuses&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="todo"&gt;Not Started&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="inprogress"&gt;In Progress&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="done"&gt;Done&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select class="filter-select" id="jpc-sort" onchange="renderBoard('jpc')"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="created"&gt;Newest first&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="deadline"&gt;By deadline&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="priority"&gt;By priority&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="new-task-btn" onclick="openTaskModal('jpc')"&gt;+ New Task&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="task-table-wrap"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;table class="task-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th style="width:32px"&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Task&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Assigned To&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Priority&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Deadline&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Status&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Added By&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th style="width:80px"&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;tbody id="jpc-tbody"&gt;&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="jpc-empty" class="empty-board" style="display:none"&gt;No tasks yet — add the first one above&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- VC (Emir only) --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="page-vc" class="page"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="board-header"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="board-title"&gt;VC &lt;em&gt;Task Board&lt;/em&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="board-subtitle"&gt;Private — Emir only&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="board-actions"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select class="filter-select" id="vc-filter-status" onchange="renderBoard('vc')"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value=""&gt;All statuses&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="todo"&gt;Not Started&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="inprogress"&gt;In Progress&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="done"&gt;Done&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select class="filter-select" id="vc-sort" onchange="renderBoard('vc')"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="created"&gt;Newest first&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="deadline"&gt;By deadline&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="priority"&gt;By priority&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="new-task-btn" onclick="openTaskModal('vc')"&gt;+ New Task&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="task-table-wrap"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;table class="task-table"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th style="width:32px"&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Task&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Priority&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Deadline&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th&gt;Status&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;th style="width:80px"&gt;&lt;/th&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;/tr&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/thead&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;tbody id="vc-tbody"&gt;&lt;/tbody&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/table&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="vc-empty" class="empty-board" style="display:none"&gt;No VC tasks yet&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;!-- SPRINT (Emir only) --&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div id="page-streak" class="page"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="board-title" style="margin-bottom:20px"&gt;21-Day &lt;em&gt;Sprint&lt;/em&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="section-hd"&gt;&lt;div class="section-lbl"&gt;Day Completion — March 29 → April 18&lt;/div&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="streak-grid" id="streakGrid"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;p style="font-size:0.73rem; color:var(--ink3); line-height:1.6;"&gt;Days auto-complete when all daily anchors are ticked. Tap any past day to toggle manually.&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="height:1px; background:var(--border); margin:24px 0;"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="section"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="section-lbl" style="margin-bottom:16px"&gt;Weekly Progress&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="weekStats"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;!-- TASK MODAL --&gt;</p>
-<p class="p1">&lt;div class="modal-overlay" id="taskModal" style="display:none" onclick="if(event.target===this) closeModal()"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;div class="modal"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="modal-title"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;span id="modalTitle"&gt;New Task&lt;/span&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="modal-close" onclick="closeModal()"&gt;×&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;input type="hidden" id="modalType"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;input type="hidden" id="modalTaskId"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label class="form-label"&gt;Task name *&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;input class="form-input" id="taskName" placeholder="What needs to get done?"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;label class="form-label"&gt;Priority&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;select class="form-select" id="taskPriority"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="medium"&gt;Medium&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="high"&gt;High&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;option value="low"&gt;Low&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;label class="form-label"&gt;Deadline&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;input class="form-input" id="taskDeadline" type="date"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-group" id="assigneeGroup"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label class="form-label"&gt;Assign to&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;select class="form-select" id="taskAssignee"&gt;&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label class="form-label"&gt;Status&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;select class="form-select" id="taskStatus"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="todo"&gt;Not Started&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="inprogress"&gt;In Progress&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;option value="done"&gt;Done&lt;/option&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/select&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="form-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;label class="form-label"&gt;Notes&lt;/label&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;textarea class="form-textarea" id="taskNotes" placeholder="Any context or details..."&gt;&lt;/textarea&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="comments-section" id="commentsSection" style="display:none"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="section-lbl" style="margin-bottom:10px"&gt;Comments&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div id="commentsList"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;div class="comment-input-row"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;input class="comment-input" id="commentInput" placeholder="Add a comment..." onkeydown="if(event.key==='Enter') addComment()"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="comment-send" onclick="addComment()"&gt;Send&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="modal-actions"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn-cancel" onclick="closeModal()"&gt;Cancel&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>&lt;button class="btn-save" onclick="saveTask()"&gt;Save Task&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;script&gt;</p>
-<p class="p1">// ─── USERS ───────────────────────────────────────────────────────</p>
-<p class="p1">// ⚠️ CHANGE THESE PINS before sharing with your team</p>
-<p class="p1">const USERS = [</p>
-<p class="p1"><span class="Apple-converted-space">  </span>{ id:'emir', name:'Emz’, <span class="Apple-converted-space">        </span>pin:’1709, color:'#c9a84c', initials:'EM', isOwner:true<span class="Apple-converted-space">  </span>},</p>
-<p class="p1"><span class="Apple-converted-space">  </span>{ id:'cf1',<span class="Apple-converted-space">  </span>name:’Eisha’, pin:’0510, color:'#4a9a6a', initials:’EI’, isOwner:false },</p>
-<p class="p1"><span class="Apple-converted-space">  </span>{ id:'cf2',<span class="Apple-converted-space">  </span>name:’Alysh, pin:’2’701, color:'#4a7ac0', initials:’AL’, isOwner:false },</p>
-<p class="p1">];</p>
-<p class="p2"><br></p>
-<p class="p1">// Pages each role can access</p>
-<p class="p1">const OWNER_PAGES<span class="Apple-converted-space">  </span>= ['today','jpc','vc','streak'];</p>
-<p class="p1">const MEMBER_PAGES = ['jpc'];</p>
-<p class="p2"><br></p>
-<p class="p1">const SPRINT_START = new Date('2026-03-29');</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── DAILY ANCHORS ───────────────────────────────────────────────</p>
-<p class="p1">const ANCHORS = {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>deen: <span class="Apple-converted-space">  </span>{ label:'Deen', <span class="Apple-converted-space">    </span>icon:'🕌', color:'#4a9a6a', items:[{id:'d1',text:'Fajr prayed on time'},{id:'d2',text:'All 5 prayers completed'},{id:'d3',text:'1 page Quran + translation'},{id:'d4',text:'Morning adhkar (10 min)'}] },</p>
-<p class="p1"><span class="Apple-converted-space">  </span>family: { label:'Family', <span class="Apple-converted-space">  </span>icon:'👨‍👩‍👧', color:'#c9a84c', items:[{id:'f1',text:'Quality time with son (1hr)'},{id:'f2',text:'Present moment with wife'},{id:'f3',text:'Small gesture — flowers / dessert / words'}] },</p>
-<p class="p1"><span class="Apple-converted-space">  </span>body: <span class="Apple-converted-space">  </span>{ label:'Physical', icon:'💪', color:'#4a7ac0', items:[{id:'b1',text:'Moved — gym / padel / walk'},{id:'b2',text:'20-min nap protected'},{id:'b3',text:'Asleep by 11pm (target)'}] },</p>
-<p class="p1"><span class="Apple-converted-space">  </span>work: <span class="Apple-converted-space">  </span>{ label:'Work', <span class="Apple-converted-space">    </span>icon:'🏢', color:'#c05050', items:[{id:'w1',text:'VC deep work block done'},{id:'w2',text:'JPC work block done'}] },</p>
-<p class="p1"><span class="Apple-converted-space">  </span>ai: <span class="Apple-converted-space">    </span>{ label:'AI', <span class="Apple-converted-space">      </span>icon:'🤖', color:'#9a6ac0', items:[{id:'a1',text:'1 task done with AI'},{id:'a2',text:'Something built / improved with Claude'}] },</p>
-<p class="p1">};</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── STORAGE ─────────────────────────────────────────────────────</p>
-<p class="p1">const SK = 'emircc_v2';</p>
-<p class="p1">function load()<span class="Apple-converted-space">    </span>{ try { return JSON.parse(localStorage.getItem(SK)) || {}; } catch { return {}; } }</p>
-<p class="p1">function save(s) <span class="Apple-converted-space">  </span>{ localStorage.setItem(SK, JSON.stringify(s)); }</p>
-<p class="p1">function todayKey(){ return new Date().toISOString().split('T')[0]; }</p>
-<p class="p1">function getState(){ const s=load(); if(!s.checks)s.checks={}; if(!s.tasks)s.tasks={jpc:[],vc:[]}; if(!s.streak)s.streak={}; return s; }</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── AUTH ─────────────────────────────────────────────────────────</p>
-<p class="p1">let currentUser = null;</p>
-<p class="p1">let selectedId<span class="Apple-converted-space">  </span>= null;</p>
-<p class="p2"><br></p>
-<p class="p1">function initLogin() {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const opts = document.getElementById('userOptions');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>opts.innerHTML = '';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>USERS.forEach(u =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const btn = document.createElement('button');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.className = 'user-btn';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.dataset.id = u.id;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.innerHTML = `&lt;div class="user-avatar" style="background:${u.color}20;color:${u.color}"&gt;${u.initials}&lt;/div&gt;${u.name}`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.onclick = () =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>document.querySelectorAll('.user-btn').forEach(b=&gt;b.classList.remove('selected'));</p>
-<p class="p1"><span class="Apple-converted-space">      </span>btn.classList.add('selected');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>selectedId = u.id;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>document.getElementById('pinInput').focus();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>};</p>
-<p class="p1"><span class="Apple-converted-space">    </span>opts.appendChild(btn);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function doLogin() {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const err = document.getElementById('loginError');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (!selectedId) { err.textContent='Please select your name.'; err.style.display='block'; return; }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const pin<span class="Apple-converted-space">  </span>= document.getElementById('pinInput').value;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const user = USERS.find(u =&gt; u.id===selectedId &amp;&amp; u.pin===pin);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (!user) { err.textContent='Incorrect PIN. Try again.'; err.style.display='block'; document.getElementById('pinInput').value=''; return; }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>err.style.display = 'none';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>currentUser = user;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('loginScreen').style.display = 'none';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('app').style.display = 'block';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>initApp();</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function doLogout() {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>currentUser = null; selectedId = null;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('loginScreen').style.display = 'flex';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('app').style.display = 'none';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('pinInput').value = '';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('loginError').style.display = 'none';</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── APP INIT ────────────────────────────────────────────────────</p>
-<p class="p1">function initApp() {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Topbar avatar</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const av = document.getElementById('topbarAvatar');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>av.textContent = currentUser.initials;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>av.style.background = currentUser.color + '25';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>av.style.color = currentUser.color;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('topbarName').textContent = currentUser.name;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Build nav based on role</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const pages = currentUser.isOwner ? OWNER_PAGES : MEMBER_PAGES;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const labels = { today:'Today', jpc:'JPC Tasks', vc:'VC Tasks', streak:'Sprint' };</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const nav = document.getElementById('navTabs');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>nav.innerHTML = '';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>pages.forEach((p, i) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const btn = document.createElement('button');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.className = 'nav-tab' + (i===0?' active':'');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.textContent = labels[p];</p>
-<p class="p1"><span class="Apple-converted-space">    </span>btn.onclick = () =&gt; showPage(p, btn);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>nav.appendChild(btn);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Show first page</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll('.page').forEach(el =&gt; el.classList.remove('active'));</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-' + pages[0]).classList.add('active');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Greeting (owner only)</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (currentUser.isOwner) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const h = new Date().getHours();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('timeOfDay').textContent = h&lt;12?'morning':h&lt;17?'afternoon':'evening';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('dayDate').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>renderToday();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>renderStreak();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>// JPC subtitle</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('jpcSubtitle').textContent = currentUser.isOwner</p>
-<p class="p1"><span class="Apple-converted-space">    </span>? 'Collaborative · Emir + co-founders'</p>
-<p class="p1"><span class="Apple-converted-space">    </span>: 'Shared task board · JPC founding team';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Populate JPC person filter</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const pf = document.getElementById('jpc-filter-person');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>pf.innerHTML = '&lt;option value=""&gt;All members&lt;/option&gt;';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>USERS.forEach(u =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const o = document.createElement('option');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>o.value=u.id; o.textContent=u.name;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>pf.appendChild(o);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>// Assignee select in modal</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const as = document.getElementById('taskAssignee');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>as.innerHTML = '';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>USERS.forEach(u =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const o = document.createElement('option');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>o.value=u.id; o.textContent=u.name;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>as.appendChild(o);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>renderBoard('jpc');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (currentUser.isOwner) renderBoard('vc');</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── TODAY ───────────────────────────────────────────────────────</p>
-<p class="p1">function renderToday() {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state<span class="Apple-converted-space">  </span>= getState();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const key<span class="Apple-converted-space">    </span>= todayKey();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (!state.checks[key]) state.checks[key] = {};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const checks = state.checks[key];</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>let totalAll=0, doneAll=0;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const bStats = {};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const sections = document.getElementById('checkSections');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>sections.innerHTML = '';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>Object.entries(ANCHORS).forEach(([bucket, meta]) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let bd=0;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>meta.items.forEach(item =&gt; { totalAll++; if(checks[item.id]){doneAll++;bd++;} });</p>
-<p class="p1"><span class="Apple-converted-space">    </span>bStats[bucket] = {done:bd, total:meta.items.length};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>const sec = document.createElement('div');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>sec.className = 'section';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>sec.innerHTML = `&lt;div class="section-hd"&gt;&lt;div class="section-lbl"&gt;${meta.icon} ${meta.label}&lt;/div&gt;&lt;div class="section-ct"&gt;${bd}/${meta.items.length}&lt;/div&gt;&lt;/div&gt;`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>meta.items.forEach(item =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const isDone = !!checks[item.id];</p>
-<p class="p1"><span class="Apple-converted-space">      </span>const el = document.createElement('div');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>el.className = 'chk-item' + (isDone?' done':'');</p>
-<p class="p1"><span class="Apple-converted-space">      </span>el.innerHTML = `&lt;div class="chk-box"&gt;&lt;svg viewBox="0 0 10 8" fill="none"&gt;&lt;path d="M1 4l3 3 5-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/div&gt;&lt;div class="chk-label"&gt;${item.text}&lt;/div&gt;&lt;span class="chk-tag" style="background:${meta.color}15;color:${meta.color}"&gt;${meta.label}&lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>el.onclick = () =&gt; toggleCheck(bucket, item.id);</p>
-<p class="p1"><span class="Apple-converted-space">      </span>sec.appendChild(el);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>sections.appendChild(sec);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>const pct = totalAll&gt;0 ? Math.round((doneAll/totalAll)*100) : 0;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('bigPct').textContent = pct+'%';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('mainProg').style.width = pct+'%';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>const row = document.getElementById('bucketRow');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>row.innerHTML = '';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>Object.entries(bStats).forEach(([bucket,{done,total}]) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const meta=ANCHORS[bucket], p=Math.round((done/total)*100);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const pill=document.createElement('div'); pill.className='b-pill';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>pill.innerHTML=`&lt;span class="b-pill-icon"&gt;${meta.icon}&lt;/span&gt;&lt;span class="b-pill-name"&gt;${meta.label}&lt;/span&gt;&lt;div class="b-pill-bar"&gt;&lt;div class="b-pill-fill" style="width:${p}%;background:${meta.color}"&gt;&lt;/div&gt;&lt;/div&gt;&lt;span class="b-pill-frac" style="color:${meta.color}"&gt;${done}/${total}&lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>row.appendChild(pill);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (doneAll===totalAll &amp;&amp; totalAll&gt;0) {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const s=getState(); s.streak[key]=true; save(s);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function toggleCheck(bucket, id) {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state=getState(), key=todayKey();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!state.checks[key]) state.checks[key]={};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>state.checks[key][id] = !state.checks[key][id];</p>
-<p class="p1"><span class="Apple-converted-space">  </span>save(state); renderToday();</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── BOARD ───────────────────────────────────────────────────────</p>
-<p class="p1">function renderBoard(type) {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state<span class="Apple-converted-space">  </span>= getState();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const tasks<span class="Apple-converted-space">  </span>= state.tasks[type] || [];</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const fperson= type==='jpc' ? document.getElementById('jpc-filter-person')?.value : null;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const fstatus= document.getElementById(`${type}-filter-status`)?.value;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const sortBy = document.getElementById(`${type}-sort`)?.value || 'created';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>let filtered = [...tasks];</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (fperson)<span class="Apple-converted-space">  </span>filtered = filtered.filter(t=&gt;t.assignee===fperson);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (fstatus)<span class="Apple-converted-space">  </span>filtered = filtered.filter(t=&gt;t.status===fstatus);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (sortBy==='deadline') filtered.sort((a,b)=&gt;(!a.deadline?1:!b.deadline?-1:new Date(a.deadline)-new Date(b.deadline)));</p>
-<p class="p1"><span class="Apple-converted-space">  </span>else if (sortBy==='priority') { const o={high:0,medium:1,low:2}; filtered.sort((a,b)=&gt;(o[a.priority]||1)-(o[b.priority]||1)); }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>else filtered.sort((a,b)=&gt;b.created-a.created);</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>const tbody=document.getElementById(`${type}-tbody`);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const empty=document.getElementById(`${type}-empty`);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>tbody.innerHTML='';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>if (filtered.length===0) { empty.style.display='block'; return; }</p>
-<p class="p1"><span class="Apple-converted-space">  </span>empty.style.display='none';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>filtered.forEach(task =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const tr=document.createElement('tr');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if(task.status==='done') tr.className='task-done';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const assignee=USERS.find(u=&gt;u.id===task.assignee);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const addedBy=USERS.find(u=&gt;u.id===task.addedBy);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const dl=deadlineDisplay(task.deadline);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const canEdit = true; // anyone can edit JPC tasks</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const canDelete = currentUser.id===task.addedBy || currentUser.isOwner;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const commentCount=(task.comments||[]).length;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const commentBadge=commentCount&gt;0?`&lt;span style="font-size:0.6rem;color:var(--ink3)"&gt; 💬${commentCount}&lt;/span&gt;`:'';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>const assigneeCell=`&lt;td&gt;${assignee?`&lt;div class="assignee-chip"&gt;&lt;div class="mini-avatar" style="background:${assignee.color}20;color:${assignee.color}"&gt;${assignee.initials}&lt;/div&gt;${assignee.name}&lt;/div&gt;`:'&lt;span style="color:var(--ink3);font-size:0.72rem"&gt;—&lt;/span&gt;'}&lt;/td&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const addedByCell=`&lt;td&gt;${addedBy?`&lt;div class="assignee-chip"&gt;&lt;div class="mini-avatar" style="background:${addedBy.color}20;color:${addedBy.color}"&gt;${addedBy.initials}&lt;/div&gt;${addedBy.name}&lt;/div&gt;`:''}&lt;/td&gt;`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>if (type==='jpc') {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>tr.innerHTML=`</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;div class="chk-box" style="cursor:pointer" onclick="cycleStatus('jpc','${task.id}')"&gt;&lt;svg viewBox="0 0 10 8" fill="none" style="opacity:${task.status==='done'?1:0}"&gt;&lt;path d="M1 4l3 3 5-6" stroke="${task.status==='done'?'#4a9a6a':'white'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td class="task-name-cell"&gt;${task.name}${commentBadge}&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>${assigneeCell}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;span class="priority-badge p-${task.priority}"&gt;${task.priority}&lt;/span&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td class="deadline-cell ${dl.cls}"&gt;${dl.text}&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;span class="status-badge s-${task.status}" onclick="cycleStatus('jpc','${task.id}')"&gt;${statusLabel(task.status)}&lt;/span&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>${addedByCell}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;div class="task-actions"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="icon-btn" onclick="openTaskModal('jpc','${task.id}')"&gt;✎&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>${canDelete?`&lt;button class="icon-btn del" onclick="deleteTask('jpc','${task.id}')"&gt;×&lt;/button&gt;`:''}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;&lt;/td&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">      </span>tr.innerHTML=`</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;div class="chk-box" style="cursor:pointer" onclick="cycleStatus('vc','${task.id}')"&gt;&lt;svg viewBox="0 0 10 8" fill="none" style="opacity:${task.status==='done'?1:0}"&gt;&lt;path d="M1 4l3 3 5-6" stroke="${task.status==='done'?'#4a9a6a':'white'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/&gt;&lt;/svg&gt;&lt;/div&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td class="task-name-cell"&gt;${task.name}${commentBadge}&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;span class="priority-badge p-${task.priority}"&gt;${task.priority}&lt;/span&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td class="deadline-cell ${dl.cls}"&gt;${dl.text}&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;span class="status-badge s-${task.status}" onclick="cycleStatus('vc','${task.id}')"&gt;${statusLabel(task.status)}&lt;/span&gt;&lt;/td&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;td&gt;&lt;div class="task-actions"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="icon-btn" onclick="openTaskModal('vc','${task.id}')"&gt;✎&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">          </span>&lt;button class="icon-btn del" onclick="deleteTask('vc','${task.id}')"&gt;×&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;&lt;/td&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>tbody.appendChild(tr);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function statusLabel(s){ return s==='todo'?'Not Started':s==='inprogress'?'In Progress':'Done'; }</p>
-<p class="p2"><br></p>
-<p class="p1">function deadlineDisplay(dl) {</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!dl) return {text:'—',cls:''};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const d=new Date(dl), today=new Date(); today.setHours(0,0,0,0);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const diff=Math.round((d-today)/86400000);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const text=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(diff&lt;0) return {text:text+' ⚠',cls:'deadline-overdue'};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(diff&lt;=3) return {text,cls:'deadline-soon'};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>return {text,cls:'deadline-ok'};</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function cycleStatus(type,id){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state=getState(), task=state.tasks[type].find(t=&gt;t.id===id);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!task) return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const cycle={todo:'inprogress',inprogress:'done',done:'todo'};</p>
-<p class="p1"><span class="Apple-converted-space">  </span>task.status=cycle[task.status]||'todo';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(task.status==='done'){task.completedBy=currentUser.id;task.completedAt=Date.now();}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>save(state); renderBoard(type);</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function deleteTask(type,id){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!confirm('Delete this task?')) return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state=getState();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>state.tasks[type]=state.tasks[type].filter(t=&gt;t.id!==id);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>save(state); renderBoard(type);</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── MODAL ───────────────────────────────────────────────────────</p>
-<p class="p1">let _mType=null, _editId=null;</p>
-<p class="p2"><br></p>
-<p class="p1">function openTaskModal(type,editId){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>_mType=type; _editId=editId||null;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('taskModal').style.display='flex';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('assigneeGroup').style.display=type==='jpc'?'block':'none';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const commSec=document.getElementById('commentsSection');</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(editId){</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('modalTitle').textContent='Edit Task';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const task=getState().tasks[type].find(t=&gt;t.id===editId);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if(!task) return;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskName').value=task.name;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskPriority').value=task.priority||'medium';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskDeadline').value=task.deadline||'';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskAssignee').value=task.assignee||currentUser.id;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskStatus').value=task.status||'todo';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskNotes').value=task.notes||'';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>commSec.style.display='block';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>renderComments(task);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('modalTitle').textContent='New Task';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>['taskName','taskNotes'].forEach(id=&gt;document.getElementById(id).value='');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskPriority').value='medium';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskDeadline').value='';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskAssignee').value=currentUser.id;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>document.getElementById('taskStatus').value='todo';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>commSec.style.display='none';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function closeModal(){ document.getElementById('taskModal').style.display='none'; _mType=null; _editId=null; }</p>
-<p class="p2"><br></p>
-<p class="p1">function saveTask(){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const name=document.getElementById('taskName').value.trim();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!name){alert('Please enter a task name.');return;}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state=getState(), type=_mType;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(_editId){</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const task=state.tasks[type].find(t=&gt;t.id===_editId);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if(task){</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.name=name;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.priority=document.getElementById('taskPriority').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.deadline=document.getElementById('taskDeadline').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.assignee=document.getElementById('taskAssignee').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.status=document.getElementById('taskStatus').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.notes=document.getElementById('taskNotes').value;</p>
-<p class="p1"><span class="Apple-converted-space">      </span>task.updatedBy=currentUser.id; task.updatedAt=Date.now();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>state.tasks[type].push({</p>
-<p class="p1"><span class="Apple-converted-space">      </span>id:Date.now().toString(), name,</p>
-<p class="p1"><span class="Apple-converted-space">      </span>priority:document.getElementById('taskPriority').value,</p>
-<p class="p1"><span class="Apple-converted-space">      </span>deadline:document.getElementById('taskDeadline').value,</p>
-<p class="p1"><span class="Apple-converted-space">      </span>assignee:document.getElementById('taskAssignee').value,</p>
-<p class="p1"><span class="Apple-converted-space">      </span>status:'todo',</p>
-<p class="p1"><span class="Apple-converted-space">      </span>notes:document.getElementById('taskNotes').value,</p>
-<p class="p1"><span class="Apple-converted-space">      </span>addedBy:currentUser.id, created:Date.now(), comments:[]</p>
-<p class="p1"><span class="Apple-converted-space">    </span>});</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>save(state); closeModal(); renderBoard(type);</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function renderComments(task){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const list=document.getElementById('commentsList');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>list.innerHTML='';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!task.comments||task.comments.length===0){</p>
-<p class="p1"><span class="Apple-converted-space">    </span>list.innerHTML='&lt;div style="font-size:0.72rem;color:var(--ink3);font-style:italic;margin-bottom:8px;"&gt;No comments yet&lt;/div&gt;';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p1"><span class="Apple-converted-space">  </span>task.comments.forEach(c=&gt;{</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const u=USERS.find(u=&gt;u.id===c.author);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const el=document.createElement('div'); el.className='comment-item';</p>
-<p class="p1"><span class="Apple-converted-space">    </span>el.innerHTML=`&lt;div class="comment-meta"&gt;&lt;div class="mini-avatar" style="background:${u?.color||'#333'}20;color:${u?.color||'#999'};width:18px;height:18px;font-size:0.45rem"&gt;${u?.initials||'?'}&lt;/div&gt;&lt;span class="comment-author" style="color:${u?.color||'var(--ink3)'}"&gt;${u?.name||'Unknown'}&lt;/span&gt;&lt;span class="comment-time"&gt;${new Date(c.time).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}&lt;/span&gt;&lt;/div&gt;&lt;div class="comment-text"&gt;${c.text}&lt;/div&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>list.appendChild(el);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>});</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">function addComment(){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const input=document.getElementById('commentInput'), text=input.value.trim();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!text||!_editId) return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state=getState(), task=state.tasks[_mType].find(t=&gt;t.id===_editId);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!task) return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!task.comments) task.comments=[];</p>
-<p class="p1"><span class="Apple-converted-space">  </span>task.comments.push({author:currentUser.id,text,time:Date.now()});</p>
-<p class="p1"><span class="Apple-converted-space">  </span>save(state); input.value=''; renderComments(task); renderBoard(_mType);</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── STREAK ──────────────────────────────────────────────────────</p>
-<p class="p1">function renderStreak(){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const state=getState(), today=todayKey();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>const grid=document.getElementById('streakGrid');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!grid) return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>grid.innerHTML='';</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>for(let i=0;i&lt;21;i++){</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const d=new Date(SPRINT_START); d.setDate(d.getDate()+i);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const k=d.toISOString().split('T')[0];</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const isToday=k===today, complete=state.streak[k], isPast=d&lt;=new Date();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const el=document.createElement('div');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>el.className='s-day'+(complete?' complete':'')+(isToday?' today':'');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>el.innerHTML=`&lt;span class="s-day-num"&gt;${i+1}&lt;/span&gt;&lt;span style="font-size:0.42rem"&gt;${d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()}&lt;/span&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>if(isPast&amp;&amp;!isToday) el.onclick=()=&gt;{ const s=getState(); s.streak[k]=!s.streak[k]; save(s); renderStreak(); };</p>
-<p class="p1"><span class="Apple-converted-space">    </span>grid.appendChild(el);</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">  </span>const ws=document.getElementById('weekStats');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(!ws) return;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>ws.innerHTML='';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>for(let w=0;w&lt;3;w++){</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let done=0;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>for(let d=0;d&lt;7;d++){ const dt=new Date(SPRINT_START); dt.setDate(dt.getDate()+w*7+d); if(state.streak[dt.toISOString().split('T')[0]]) done++; }</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const pct=Math.round((done/7)*100);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>ws.innerHTML+=`&lt;div style="margin-bottom:14px"&gt;&lt;div style="display:flex;justify-content:space-between;margin-bottom:6px"&gt;&lt;span style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3)"&gt;Week ${w+1}&lt;/span&gt;&lt;span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--gold)"&gt;${done}/7 days&lt;/span&gt;&lt;/div&gt;&lt;div style="height:3px;background:var(--border);border-radius:1px;overflow:hidden"&gt;&lt;div style="height:100%;width:${pct}%;background:var(--green);border-radius:1px;transition:width 0.4s"&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;`;</p>
-<p class="p1"><span class="Apple-converted-space">  </span>}</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── NAV ─────────────────────────────────────────────────────────</p>
-<p class="p1">function showPage(name,btn){</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll('.page').forEach(p=&gt;p.classList.remove('active'));</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.querySelectorAll('.nav-tab').forEach(b=&gt;b.classList.remove('active'));</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('page-'+name).classList.add('active');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>btn.classList.add('active');</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(name==='streak') renderStreak();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>if(name==='jpc'||name==='vc') renderBoard(name);</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">// ─── BOOT ────────────────────────────────────────────────────────</p>
-<p class="p1">window.addEventListener('load',()=&gt;{</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('loadingOverlay').style.display='none';</p>
-<p class="p1"><span class="Apple-converted-space">  </span>initLogin();</p>
-<p class="p1"><span class="Apple-converted-space">  </span>document.getElementById('loginScreen').style.display='flex';</p>
-<p class="p1">});</p>
-<p class="p1">&lt;/script&gt;</p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading...</div>
+</div>
+
+<div id="loginScreen" style="display:none">
+  <div class="login-box">
+    <div class="login-top">JPC · Command Centre</div>
+    <h2>Welcome back</h2>
+    <p>Select your name and enter your PIN to continue.</p>
+    <span class="login-label">Who are you?</span>
+    <div class="user-options" id="userOptions"></div>
+    <span class="login-label">PIN</span>
+    <input class="pin-input" id="pinInput" type="password" maxlength="4" placeholder="••••" inputmode="numeric" onkeydown="if(event.key==='Enter') doLogin()">
+    <button class="login-btn" onclick="doLogin()">Enter →</button>
+    <div class="login-error" id="loginError">Incorrect PIN. Try again.</div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div style="display:flex; align-items:center; gap:20px;">
+      <div class="logo">JPC <em>Command</em></div>
+      <div class="nav-tabs" id="navTabs"></div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip">
+        <div class="mini-avatar" id="topbarAvatar"></div>
+        <span id="topbarName" style="font-size:0.74rem"></span>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    </div>
+  </div>
+
+  <!-- TODAY (Emir only) -->
+  <div id="page-today" class="page">
+    <div class="day-header">
+      <div>
+        <div class="day-title">Good <em id="timeOfDay">morning</em></div>
+        <div class="day-date" id="dayDate"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="big-num" id="bigPct">0%</div>
+        <div class="big-label">Today's Progress</div>
+        <div class="main-prog"><div class="main-prog-fill" id="mainProg" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="bucket-row" id="bucketRow"></div>
+    <div id="checkSections"></div>
+  </div>
+
+  <!-- JPC (everyone) -->
+  <div id="page-jpc" class="page">
+    <div class="board-header">
+      <div>
+        <div class="board-title">JPC <em>Task Board</em></div>
+        <div class="board-subtitle" id="jpcSubtitle"></div>
+      </div>
+      <div class="board-actions">
+        <select class="filter-select" id="jpc-filter-person" onchange="renderBoard('jpc')">
+          <option value="">All members</option>
+        </select>
+        <select class="filter-select" id="jpc-filter-status" onchange="renderBoard('jpc')">
+          <option value="">All statuses</option>
+          <option value="todo">Not Started</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+        <select class="filter-select" id="jpc-sort" onchange="renderBoard('jpc')">
+          <option value="created">Newest first</option>
+          <option value="deadline">By deadline</option>
+          <option value="priority">By priority</option>
+        </select>
+        <button class="new-task-btn" onclick="openTaskModal('jpc')">+ New Task</button>
+      </div>
+    </div>
+    <div class="task-table-wrap">
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th style="width:32px"></th>
+            <th>Task</th>
+            <th>Assigned To</th>
+            <th>Priority</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Added By</th>
+            <th style="width:80px"></th>
+          </tr>
+        </thead>
+        <tbody id="jpc-tbody"></tbody>
+      </table>
+      <div id="jpc-empty" class="empty-board" style="display:none">No tasks yet — add the first one above</div>
+    </div>
+  </div>
+
+  <!-- VC (Emir only) -->
+  <div id="page-vc" class="page">
+    <div class="board-header">
+      <div>
+        <div class="board-title">VC <em>Task Board</em></div>
+        <div class="board-subtitle">Private — Emir only</div>
+      </div>
+      <div class="board-actions">
+        <select class="filter-select" id="vc-filter-status" onchange="renderBoard('vc')">
+          <option value="">All statuses</option>
+          <option value="todo">Not Started</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+        </select>
+        <select class="filter-select" id="vc-sort" onchange="renderBoard('vc')">
+          <option value="created">Newest first</option>
+          <option value="deadline">By deadline</option>
+          <option value="priority">By priority</option>
+        </select>
+        <button class="new-task-btn" onclick="openTaskModal('vc')">+ New Task</button>
+      </div>
+    </div>
+    <div class="task-table-wrap">
+      <table class="task-table">
+        <thead>
+          <tr>
+            <th style="width:32px"></th>
+            <th>Task</th>
+            <th>Priority</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th style="width:80px"></th>
+          </tr>
+        </thead>
+        <tbody id="vc-tbody"></tbody>
+      </table>
+      <div id="vc-empty" class="empty-board" style="display:none">No VC tasks yet</div>
+    </div>
+  </div>
+
+  <!-- SPRINT (Emir only) -->
+  <div id="page-streak" class="page">
+    <div class="board-title" style="margin-bottom:20px">21-Day <em>Sprint</em></div>
+    <div class="section">
+      <div class="section-hd"><div class="section-lbl">Day Completion — March 29 → April 18</div></div>
+      <div class="streak-grid" id="streakGrid"></div>
+      <p style="font-size:0.73rem; color:var(--ink3); line-height:1.6;">Days auto-complete when all daily anchors are ticked. Tap any past day to toggle manually.</p>
+    </div>
+    <div style="height:1px; background:var(--border); margin:24px 0;"></div>
+    <div class="section">
+      <div class="section-lbl" style="margin-bottom:16px">Weekly Progress</div>
+      <div id="weekStats"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="taskModal" style="display:none" onclick="if(event.target===this) closeModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitle">New Task</span>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <input type="hidden" id="modalType">
+    <input type="hidden" id="modalTaskId">
+    <div class="form-group">
+      <label class="form-label">Task name *</label>
+      <input class="form-input" id="taskName" placeholder="What needs to get done?">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Priority</label>
+        <select class="form-select" id="taskPriority">
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Deadline</label>
+        <input class="form-input" id="taskDeadline" type="date">
+      </div>
+    </div>
+    <div class="form-group" id="assigneeGroup">
+      <label class="form-label">Assign to</label>
+      <select class="form-select" id="taskAssignee"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Status</label>
+      <select class="form-select" id="taskStatus">
+        <option value="todo">Not Started</option>
+        <option value="inprogress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="taskNotes" placeholder="Any context or details..."></textarea>
+    </div>
+    <div class="comments-section" id="commentsSection" style="display:none">
+      <div class="section-lbl" style="margin-bottom:10px">Comments</div>
+      <div id="commentsList"></div>
+      <div class="comment-input-row">
+        <input class="comment-input" id="commentInput" placeholder="Add a comment..." onkeydown="if(event.key==='Enter') addComment()">
+        <button class="comment-send" onclick="addComment()">Send</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── USERS ───────────────────────────────────────────────────────
+// ⚠️ CHANGE THESE PINS before sharing with your team
+const USERS = [
+  { id:'emir', name:'Emz',         pin:'1709', color:'#c9a84c', initials:'EM', isOwner:true  },
+  { id:'cf1',  name:'Eish', pin:'0510', color:'#4a9a6a', initials:'EI', isOwner:false },
+  { id:'cf2',  name:'Alysh', pin:'2701', color:'#4a7ac0', initials:'AL', isOwner:false },
+];
+
+// Pages each role can access
+const OWNER_PAGES  = ['today','jpc','vc','streak'];
+const MEMBER_PAGES = ['jpc'];
+
+const SPRINT_START = new Date('2026-03-29');
+
+// ─── DAILY ANCHORS ───────────────────────────────────────────────
+const ANCHORS = {
+  deen:   { label:'Deen',     icon:'🕌', color:'#4a9a6a', items:[{id:'d1',text:'Fajr prayed on time'},{id:'d2',text:'All 5 prayers completed'},{id:'d3',text:'1 page Quran + translation'},{id:'d4',text:'Morning adhkar (10 min)'}] },
+  family: { label:'Family',   icon:'👨‍👩‍👧', color:'#c9a84c', items:[{id:'f1',text:'Quality time with son (1hr)'},{id:'f2',text:'Present moment with wife'},{id:'f3',text:'Small gesture — flowers / dessert / words'}] },
+  body:   { label:'Physical', icon:'💪', color:'#4a7ac0', items:[{id:'b1',text:'Moved — gym / padel / walk'},{id:'b2',text:'20-min nap protected'},{id:'b3',text:'Asleep by 11pm (target)'}] },
+  work:   { label:'Work',     icon:'🏢', color:'#c05050', items:[{id:'w1',text:'VC deep work block done'},{id:'w2',text:'JPC work block done'}] },
+  ai:     { label:'AI',       icon:'🤖', color:'#9a6ac0', items:[{id:'a1',text:'1 task done with AI'},{id:'a2',text:'Something built / improved with Claude'}] },
+};
+
+// ─── STORAGE ─────────────────────────────────────────────────────
+const SK = 'emircc_v2';
+function load()    { try { return JSON.parse(localStorage.getItem(SK)) || {}; } catch { return {}; } }
+function save(s)   { localStorage.setItem(SK, JSON.stringify(s)); }
+function todayKey(){ return new Date().toISOString().split('T')[0]; }
+function getState(){ const s=load(); if(!s.checks)s.checks={}; if(!s.tasks)s.tasks={jpc:[],vc:[]}; if(!s.streak)s.streak={}; return s; }
+
+// ─── AUTH ─────────────────────────────────────────────────────────
+let currentUser = null;
+let selectedId  = null;
+
+function initLogin() {
+  const opts = document.getElementById('userOptions');
+  opts.innerHTML = '';
+  USERS.forEach(u => {
+    const btn = document.createElement('button');
+    btn.className = 'user-btn';
+    btn.dataset.id = u.id;
+    btn.innerHTML = `<div class="user-avatar" style="background:${u.color}20;color:${u.color}">${u.initials}</div>${u.name}`;
+    btn.onclick = () => {
+      document.querySelectorAll('.user-btn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedId = u.id;
+      document.getElementById('pinInput').focus();
+    };
+    opts.appendChild(btn);
+  });
+}
+
+function doLogin() {
+  const err = document.getElementById('loginError');
+  if (!selectedId) { err.textContent='Please select your name.'; err.style.display='block'; return; }
+  const pin  = document.getElementById('pinInput').value;
+  const user = USERS.find(u => u.id===selectedId && u.pin===pin);
+  if (!user) { err.textContent='Incorrect PIN. Try again.'; err.style.display='block'; document.getElementById('pinInput').value=''; return; }
+  err.style.display = 'none';
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  initApp();
+}
+
+function doLogout() {
+  currentUser = null; selectedId = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pinInput').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ─── APP INIT ────────────────────────────────────────────────────
+function initApp() {
+  // Topbar avatar
+  const av = document.getElementById('topbarAvatar');
+  av.textContent = currentUser.initials;
+  av.style.background = currentUser.color + '25';
+  av.style.color = currentUser.color;
+  document.getElementById('topbarName').textContent = currentUser.name;
+
+  // Build nav based on role
+  const pages = currentUser.isOwner ? OWNER_PAGES : MEMBER_PAGES;
+  const labels = { today:'Today', jpc:'JPC Tasks', vc:'VC Tasks', streak:'Sprint' };
+  const nav = document.getElementById('navTabs');
+  nav.innerHTML = '';
+  pages.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-tab' + (i===0?' active':'');
+    btn.textContent = labels[p];
+    btn.onclick = () => showPage(p, btn);
+    nav.appendChild(btn);
+  });
+
+  // Show first page
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + pages[0]).classList.add('active');
+
+  // Greeting (owner only)
+  if (currentUser.isOwner) {
+    const h = new Date().getHours();
+    document.getElementById('timeOfDay').textContent = h<12?'morning':h<17?'afternoon':'evening';
+    document.getElementById('dayDate').textContent = new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+    renderToday();
+    renderStreak();
+  }
+
+  // JPC subtitle
+  document.getElementById('jpcSubtitle').textContent = currentUser.isOwner
+    ? 'Collaborative · Emir + co-founders'
+    : 'Shared task board · JPC founding team';
+
+  // Populate JPC person filter
+  const pf = document.getElementById('jpc-filter-person');
+  pf.innerHTML = '<option value="">All members</option>';
+  USERS.forEach(u => {
+    const o = document.createElement('option');
+    o.value=u.id; o.textContent=u.name;
+    pf.appendChild(o);
+  });
+
+  // Assignee select in modal
+  const as = document.getElementById('taskAssignee');
+  as.innerHTML = '';
+  USERS.forEach(u => {
+    const o = document.createElement('option');
+    o.value=u.id; o.textContent=u.name;
+    as.appendChild(o);
+  });
+
+  renderBoard('jpc');
+  if (currentUser.isOwner) renderBoard('vc');
+}
+
+// ─── TODAY ───────────────────────────────────────────────────────
+function renderToday() {
+  const state  = getState();
+  const key    = todayKey();
+  if (!state.checks[key]) state.checks[key] = {};
+  const checks = state.checks[key];
+
+  let totalAll=0, doneAll=0;
+  const bStats = {};
+  const sections = document.getElementById('checkSections');
+  sections.innerHTML = '';
+
+  Object.entries(ANCHORS).forEach(([bucket, meta]) => {
+    let bd=0;
+    meta.items.forEach(item => { totalAll++; if(checks[item.id]){doneAll++;bd++;} });
+    bStats[bucket] = {done:bd, total:meta.items.length};
+
+    const sec = document.createElement('div');
+    sec.className = 'section';
+    sec.innerHTML = `<div class="section-hd"><div class="section-lbl">${meta.icon} ${meta.label}</div><div class="section-ct">${bd}/${meta.items.length}</div></div>`;
+
+    meta.items.forEach(item => {
+      const isDone = !!checks[item.id];
+      const el = document.createElement('div');
+      el.className = 'chk-item' + (isDone?' done':'');
+      el.innerHTML = `<div class="chk-box"><svg viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="chk-label">${item.text}</div><span class="chk-tag" style="background:${meta.color}15;color:${meta.color}">${meta.label}</span>`;
+      el.onclick = () => toggleCheck(bucket, item.id);
+      sec.appendChild(el);
+    });
+    sections.appendChild(sec);
+  });
+
+  const pct = totalAll>0 ? Math.round((doneAll/totalAll)*100) : 0;
+  document.getElementById('bigPct').textContent = pct+'%';
+  document.getElementById('mainProg').style.width = pct+'%';
+
+  const row = document.getElementById('bucketRow');
+  row.innerHTML = '';
+  Object.entries(bStats).forEach(([bucket,{done,total}]) => {
+    const meta=ANCHORS[bucket], p=Math.round((done/total)*100);
+    const pill=document.createElement('div'); pill.className='b-pill';
+    pill.innerHTML=`<span class="b-pill-icon">${meta.icon}</span><span class="b-pill-name">${meta.label}</span><div class="b-pill-bar"><div class="b-pill-fill" style="width:${p}%;background:${meta.color}"></div></div><span class="b-pill-frac" style="color:${meta.color}">${done}/${total}</span>`;
+    row.appendChild(pill);
+  });
+
+  if (doneAll===totalAll && totalAll>0) {
+    const s=getState(); s.streak[key]=true; save(s);
+  }
+}
+
+function toggleCheck(bucket, id) {
+  const state=getState(), key=todayKey();
+  if(!state.checks[key]) state.checks[key]={};
+  state.checks[key][id] = !state.checks[key][id];
+  save(state); renderToday();
+}
+
+// ─── BOARD ───────────────────────────────────────────────────────
+function renderBoard(type) {
+  const state  = getState();
+  const tasks  = state.tasks[type] || [];
+  const fperson= type==='jpc' ? document.getElementById('jpc-filter-person')?.value : null;
+  const fstatus= document.getElementById(`${type}-filter-status`)?.value;
+  const sortBy = document.getElementById(`${type}-sort`)?.value || 'created';
+
+  let filtered = [...tasks];
+  if (fperson)  filtered = filtered.filter(t=>t.assignee===fperson);
+  if (fstatus)  filtered = filtered.filter(t=>t.status===fstatus);
+  if (sortBy==='deadline') filtered.sort((a,b)=>(!a.deadline?1:!b.deadline?-1:new Date(a.deadline)-new Date(b.deadline)));
+  else if (sortBy==='priority') { const o={high:0,medium:1,low:2}; filtered.sort((a,b)=>(o[a.priority]||1)-(o[b.priority]||1)); }
+  else filtered.sort((a,b)=>b.created-a.created);
+
+  const tbody=document.getElementById(`${type}-tbody`);
+  const empty=document.getElementById(`${type}-empty`);
+  tbody.innerHTML='';
+
+  if (filtered.length===0) { empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  filtered.forEach(task => {
+    const tr=document.createElement('tr');
+    if(task.status==='done') tr.className='task-done';
+    const assignee=USERS.find(u=>u.id===task.assignee);
+    const addedBy=USERS.find(u=>u.id===task.addedBy);
+    const dl=deadlineDisplay(task.deadline);
+    const canEdit = true; // anyone can edit JPC tasks
+    const canDelete = currentUser.id===task.addedBy || currentUser.isOwner;
+    const commentCount=(task.comments||[]).length;
+    const commentBadge=commentCount>0?`<span style="font-size:0.6rem;color:var(--ink3)"> 💬${commentCount}</span>`:'';
+
+    const assigneeCell=`<td>${assignee?`<div class="assignee-chip"><div class="mini-avatar" style="background:${assignee.color}20;color:${assignee.color}">${assignee.initials}</div>${assignee.name}</div>`:'<span style="color:var(--ink3);font-size:0.72rem">—</span>'}</td>`;
+    const addedByCell=`<td>${addedBy?`<div class="assignee-chip"><div class="mini-avatar" style="background:${addedBy.color}20;color:${addedBy.color}">${addedBy.initials}</div>${addedBy.name}</div>`:''}</td>`;
+
+    if (type==='jpc') {
+      tr.innerHTML=`
+        <td><div class="chk-box" style="cursor:pointer" onclick="cycleStatus('jpc','${task.id}')"><svg viewBox="0 0 10 8" fill="none" style="opacity:${task.status==='done'?1:0}"><path d="M1 4l3 3 5-6" stroke="${task.status==='done'?'#4a9a6a':'white'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></td>
+        <td class="task-name-cell">${task.name}${commentBadge}</td>
+        ${assigneeCell}
+        <td><span class="priority-badge p-${task.priority}">${task.priority}</span></td>
+        <td class="deadline-cell ${dl.cls}">${dl.text}</td>
+        <td><span class="status-badge s-${task.status}" onclick="cycleStatus('jpc','${task.id}')">${statusLabel(task.status)}</span></td>
+        ${addedByCell}
+        <td><div class="task-actions">
+          <button class="icon-btn" onclick="openTaskModal('jpc','${task.id}')">✎</button>
+          ${canDelete?`<button class="icon-btn del" onclick="deleteTask('jpc','${task.id}')">×</button>`:''}
+        </div></td>`;
+    } else {
+      tr.innerHTML=`
+        <td><div class="chk-box" style="cursor:pointer" onclick="cycleStatus('vc','${task.id}')"><svg viewBox="0 0 10 8" fill="none" style="opacity:${task.status==='done'?1:0}"><path d="M1 4l3 3 5-6" stroke="${task.status==='done'?'#4a9a6a':'white'}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div></td>
+        <td class="task-name-cell">${task.name}${commentBadge}</td>
+        <td><span class="priority-badge p-${task.priority}">${task.priority}</span></td>
+        <td class="deadline-cell ${dl.cls}">${dl.text}</td>
+        <td><span class="status-badge s-${task.status}" onclick="cycleStatus('vc','${task.id}')">${statusLabel(task.status)}</span></td>
+        <td><div class="task-actions">
+          <button class="icon-btn" onclick="openTaskModal('vc','${task.id}')">✎</button>
+          <button class="icon-btn del" onclick="deleteTask('vc','${task.id}')">×</button>
+        </div></td>`;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function statusLabel(s){ return s==='todo'?'Not Started':s==='inprogress'?'In Progress':'Done'; }
+
+function deadlineDisplay(dl) {
+  if(!dl) return {text:'—',cls:''};
+  const d=new Date(dl), today=new Date(); today.setHours(0,0,0,0);
+  const diff=Math.round((d-today)/86400000);
+  const text=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  if(diff<0) return {text:text+' ⚠',cls:'deadline-overdue'};
+  if(diff<=3) return {text,cls:'deadline-soon'};
+  return {text,cls:'deadline-ok'};
+}
+
+function cycleStatus(type,id){
+  const state=getState(), task=state.tasks[type].find(t=>t.id===id);
+  if(!task) return;
+  const cycle={todo:'inprogress',inprogress:'done',done:'todo'};
+  task.status=cycle[task.status]||'todo';
+  if(task.status==='done'){task.completedBy=currentUser.id;task.completedAt=Date.now();}
+  save(state); renderBoard(type);
+}
+
+function deleteTask(type,id){
+  if(!confirm('Delete this task?')) return;
+  const state=getState();
+  state.tasks[type]=state.tasks[type].filter(t=>t.id!==id);
+  save(state); renderBoard(type);
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────
+let _mType=null, _editId=null;
+
+function openTaskModal(type,editId){
+  _mType=type; _editId=editId||null;
+  document.getElementById('taskModal').style.display='flex';
+  document.getElementById('assigneeGroup').style.display=type==='jpc'?'block':'none';
+  const commSec=document.getElementById('commentsSection');
+
+  if(editId){
+    document.getElementById('modalTitle').textContent='Edit Task';
+    const task=getState().tasks[type].find(t=>t.id===editId);
+    if(!task) return;
+    document.getElementById('taskName').value=task.name;
+    document.getElementById('taskPriority').value=task.priority||'medium';
+    document.getElementById('taskDeadline').value=task.deadline||'';
+    document.getElementById('taskAssignee').value=task.assignee||currentUser.id;
+    document.getElementById('taskStatus').value=task.status||'todo';
+    document.getElementById('taskNotes').value=task.notes||'';
+    commSec.style.display='block';
+    renderComments(task);
+  } else {
+    document.getElementById('modalTitle').textContent='New Task';
+    ['taskName','taskNotes'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('taskPriority').value='medium';
+    document.getElementById('taskDeadline').value='';
+    document.getElementById('taskAssignee').value=currentUser.id;
+    document.getElementById('taskStatus').value='todo';
+    commSec.style.display='none';
+  }
+}
+
+function closeModal(){ document.getElementById('taskModal').style.display='none'; _mType=null; _editId=null; }
+
+function saveTask(){
+  const name=document.getElementById('taskName').value.trim();
+  if(!name){alert('Please enter a task name.');return;}
+  const state=getState(), type=_mType;
+
+  if(_editId){
+    const task=state.tasks[type].find(t=>t.id===_editId);
+    if(task){
+      task.name=name;
+      task.priority=document.getElementById('taskPriority').value;
+      task.deadline=document.getElementById('taskDeadline').value;
+      task.assignee=document.getElementById('taskAssignee').value;
+      task.status=document.getElementById('taskStatus').value;
+      task.notes=document.getElementById('taskNotes').value;
+      task.updatedBy=currentUser.id; task.updatedAt=Date.now();
+    }
+  } else {
+    state.tasks[type].push({
+      id:Date.now().toString(), name,
+      priority:document.getElementById('taskPriority').value,
+      deadline:document.getElementById('taskDeadline').value,
+      assignee:document.getElementById('taskAssignee').value,
+      status:'todo',
+      notes:document.getElementById('taskNotes').value,
+      addedBy:currentUser.id, created:Date.now(), comments:[]
+    });
+  }
+  save(state); closeModal(); renderBoard(type);
+}
+
+function renderComments(task){
+  const list=document.getElementById('commentsList');
+  list.innerHTML='';
+  if(!task.comments||task.comments.length===0){
+    list.innerHTML='<div style="font-size:0.72rem;color:var(--ink3);font-style:italic;margin-bottom:8px;">No comments yet</div>';
+    return;
+  }
+  task.comments.forEach(c=>{
+    const u=USERS.find(u=>u.id===c.author);
+    const el=document.createElement('div'); el.className='comment-item';
+    el.innerHTML=`<div class="comment-meta"><div class="mini-avatar" style="background:${u?.color||'#333'}20;color:${u?.color||'#999'};width:18px;height:18px;font-size:0.45rem">${u?.initials||'?'}</div><span class="comment-author" style="color:${u?.color||'var(--ink3)'}">${u?.name||'Unknown'}</span><span class="comment-time">${new Date(c.time).toLocaleDateString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span></div><div class="comment-text">${c.text}</div>`;
+    list.appendChild(el);
+  });
+}
+
+function addComment(){
+  const input=document.getElementById('commentInput'), text=input.value.trim();
+  if(!text||!_editId) return;
+  const state=getState(), task=state.tasks[_mType].find(t=>t.id===_editId);
+  if(!task) return;
+  if(!task.comments) task.comments=[];
+  task.comments.push({author:currentUser.id,text,time:Date.now()});
+  save(state); input.value=''; renderComments(task); renderBoard(_mType);
+}
+
+// ─── STREAK ──────────────────────────────────────────────────────
+function renderStreak(){
+  const state=getState(), today=todayKey();
+  const grid=document.getElementById('streakGrid');
+  if(!grid) return;
+  grid.innerHTML='';
+
+  for(let i=0;i<21;i++){
+    const d=new Date(SPRINT_START); d.setDate(d.getDate()+i);
+    const k=d.toISOString().split('T')[0];
+    const isToday=k===today, complete=state.streak[k], isPast=d<=new Date();
+    const el=document.createElement('div');
+    el.className='s-day'+(complete?' complete':'')+(isToday?' today':'');
+    el.innerHTML=`<span class="s-day-num">${i+1}</span><span style="font-size:0.42rem">${d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()}</span>`;
+    if(isPast&&!isToday) el.onclick=()=>{ const s=getState(); s.streak[k]=!s.streak[k]; save(s); renderStreak(); };
+    grid.appendChild(el);
+  }
+
+  const ws=document.getElementById('weekStats');
+  if(!ws) return;
+  ws.innerHTML='';
+  for(let w=0;w<3;w++){
+    let done=0;
+    for(let d=0;d<7;d++){ const dt=new Date(SPRINT_START); dt.setDate(dt.getDate()+w*7+d); if(state.streak[dt.toISOString().split('T')[0]]) done++; }
+    const pct=Math.round((done/7)*100);
+    ws.innerHTML+=`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3)">Week ${w+1}</span><span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--gold)">${done}/7 days</span></div><div style="height:3px;background:var(--border);border-radius:1px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--green);border-radius:1px;transition:width 0.4s"></div></div></div>`;
+  }
+}
+
+// ─── NAV ─────────────────────────────────────────────────────────
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  btn.classList.add('active');
+  if(name==='streak') renderStreak();
+  if(name==='jpc'||name==='vc') renderBoard(name);
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────
+window.addEventListener('load',()=>{
+  document.getElementById('loadingOverlay').style.display='none';
+  initLogin();
+  document.getElementById('loginScreen').style.display='flex';
+});
+</script>
 </body>
 </html>
