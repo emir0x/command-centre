@@ -237,6 +237,36 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font
     </div>
   </div>
 
+  <div id="page-personal" class="page">
+  <div class="board-header">
+    <div>
+      <div class="board-title">Personal <em>Tasks</em></div>
+      <div class="board-subtitle">Private — Emir only</div>
+    </div>
+    <div class="board-actions">
+      <select class="filter-select" id="personal-filter-status" onchange="renderBoard('personal')">
+        <option value="">All statuses</option>
+        <option value="todo">Not Started</option>
+        <option value="inprogress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+      <select class="filter-select" id="personal-sort" onchange="renderBoard('personal')">
+        <option value="created">Newest first</option>
+        <option value="deadline">By deadline</option>
+        <option value="priority">By priority</option>
+      </select>
+      <button class="new-task-btn" onclick="openTaskModal('personal')">+ New Task</button>
+    </div>
+  </div>
+  <div class="task-table-wrap">
+    <table class="task-table">
+      <thead><tr><th style="width:32px"></th><th>Task</th><th>Priority</th><th>Deadline</th><th>Status</th><th style="width:80px"></th></tr></thead>
+      <tbody id="personal-tbody"></tbody>
+    </table>
+    <div id="personal-empty" class="empty-board" style="display:none">No personal tasks yet</div>
+  </div>
+</div>
+
   <div id="page-streak" class="page">
     <div class="board-title" style="margin-bottom:20px">21-Day <em>Sprint</em></div>
     <div class="section">
@@ -285,7 +315,7 @@ const USERS=[
   {id:'cf2',name:'Alysh',color:'#4a7ac0',initials:'AL',isOwner:false,pinHash:'ce83293c66150ed42f52747cca6a91b85332c740cde625195b15f1abb4b90196'},
 ];
 
-const OWNER_PAGES=['today','jpc','vc','streak'];
+const OWNER_PAGES=['today','jpc','vc','personal','streak'];
 const MEMBER_PAGES=['jpc'];
 const SPRINT_START=new Date('2026-03-29');
 const ANCHORS={
@@ -317,7 +347,7 @@ const DB={
 
 async function hashPin(pin){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin));return[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 
-let currentUser=null,selectedId=null,localChecks={},localStreak={},tasks={jpc:[],vc:[]};
+let currentUser=null,selectedId=null,localChecks={},localStreak={},tasks={jpc:[],vc:[],personal:[]};
 
 function setSync(s){const el=document.getElementById('syncIndicator');if(!el)return;el.className='sync-indicator sync-'+s;el.textContent=s==='ok'?'● Synced':s==='err'?'● Offline':'○ Syncing';}
 function todayKey(){return new Date().toISOString().split('T')[0];}
@@ -360,7 +390,7 @@ async function initApp(){
   av.textContent=currentUser.initials;av.style.background=currentUser.color+'25';av.style.color=currentUser.color;
   document.getElementById('topbarName').textContent=currentUser.name;
   const pages=currentUser.isOwner?OWNER_PAGES:MEMBER_PAGES;
-  const labels={today:'Today',jpc:'JPC Tasks',vc:'VC Tasks',streak:'Sprint'};
+  const labels={today:'Today',jpc:'JPC Tasks',vc:'VC Tasks',personal:'Personal',streak:'Sprint'};
   const nav=document.getElementById('navTabs');nav.innerHTML='';
   pages.forEach((p,i)=>{const btn=document.createElement('button');btn.className='nav-tab'+(i===0?' active':'');btn.textContent=labels[p];btn.onclick=()=>showPage(p,btn);nav.appendChild(btn);});
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -379,6 +409,7 @@ async function loadAllData(){
   try{
     tasks.jpc=await DB.get('tasks',{type:'jpc'});
     tasks.vc=currentUser.isOwner?await DB.get('tasks',{type:'vc'}):[];
+    tasks.personal=currentUser.isOwner?await DB.get('tasks',{type:'personal'}):[];
     if(currentUser.isOwner){
       const key=todayKey();
       const rows=await DB.get('daily_checks',{day_key:key,user_id:currentUser.id});
@@ -386,7 +417,7 @@ async function loadAllData(){
       const sr=await DB.get('streak');localStreak={};sr.forEach(r=>{localStreak[r.day_key]=r.complete;});
       renderToday();renderStreak();
     }
-    renderBoard('jpc');if(currentUser.isOwner)renderBoard('vc');
+    renderBoard('jpc');if(currentUser.isOwner){renderBoard('vc');renderBoard('personal');}
     setSync('ok');
   }catch(e){console.error(e);setSync('err');}
 }
