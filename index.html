@@ -267,6 +267,22 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font
   </div>
 </div>
 
+<div id="page-progress" class="page">
+  <div class="board-title">Progress <em>History</em></div>
+  <div class="board-subtitle">21-day sprint · tap any day to see your breakdown</div>
+  <div id="prog-summary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;"></div>
+  <div class="section-lbl" style="margin-bottom:12px">Completion trend</div>
+  <div style="position:relative;width:100%;height:140px;margin-bottom:28px"><canvas id="trendChart"></canvas></div>
+  <div class="section-lbl" style="margin-bottom:12px">Daily heatmap</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-size:0.7rem;font-family:'DM Mono',monospace;color:var(--ink3)">
+    <span>░ No data</span><span style="color:#4a9a6a">▓ 1–40%</span><span style="color:#4ab86a">▓ 41–80%</span><span style="color:#c0f0a0">▓ 81–100%</span>
+  </div>
+  <div id="prog-heatmap" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:28px;"></div>
+  <div id="prog-detail" style="background:var(--surface);border:1px solid var(--border);padding:20px;border-radius:2px;">
+    <div style="font-size:0.78rem;color:var(--ink3);font-style:italic;">Tap a day above to see the breakdown</div>
+  </div>
+</div>
+
   <div id="page-streak" class="page">
     <div class="board-title" style="margin-bottom:20px">21-Day <em>Sprint</em></div>
     <div class="section">
@@ -315,7 +331,7 @@ const USERS=[
   {id:'cf2',name:'Alysh',color:'#4a7ac0',initials:'AL',isOwner:false,pinHash:'ce83293c66150ed42f52747cca6a91b85332c740cde625195b15f1abb4b90196'},
 ];
 
-const OWNER_PAGES=['today','jpc','vc','personal','streak'];
+const OWNER_PAGES=['today','jpc','vc','personal','progress','streak'];
 const MEMBER_PAGES=['jpc'];
 const SPRINT_START=new Date('2026-03-29');
 const ANCHORS={
@@ -348,7 +364,84 @@ const DB={
 async function hashPin(pin){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin));return[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 
 let currentUser=null,selectedId=null,localChecks={},localStreak={},tasks={jpc:[],vc:[],personal:[]};
+function renderProgress(){
+  const TOTAL=14;
+  const keys=[],pcts=[];
+  for(let i=0;i<21;i++){
+    const d=new Date(SPRINT_START);d.setDate(d.getDate()+i);
+    const k=d.toISOString().split('T')[0];
+    keys.push({k,d,i});
+    const checks=localChecks[k]||{};
+    const done=Object.values(checks).filter(Boolean).length;
+    pcts.push(k<=todayKey()&&Object.keys(checks).length>0?Math.round((done/TOTAL)*100):null);
+  }
 
+  // Summary cards
+  const filled=pcts.filter(p=>p!==null);
+  const avg=filled.length?Math.round(filled.reduce((a,b)=>a+b,0)/filled.length):0;
+  const perfect=filled.filter(p=>p===100).length;
+  let streak=0;for(let i=filled.length-1;i>=0;i--){if((filled[i]||0)>=50)streak++;else break;}
+  const sr=document.getElementById('prog-summary');
+  if(sr){sr.innerHTML='';
+    [{label:'Days tracked',value:filled.length,sub:'of 21'},{label:'Avg completion',value:avg+'%',sub:'across buckets'},{label:'Perfect days',value:perfect,sub:'100% complete'},{label:'Current streak',value:streak,sub:'days ≥50%'}]
+    .forEach(m=>{sr.innerHTML+=`<div style="background:var(--surface2);padding:14px;border:1px solid var(--border)"><div style="font-family:'DM Mono',monospace;font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">${m.label}</div><div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:300;color:var(--gold)">${m.value}</div><div style="font-size:0.7rem;color:var(--ink3);margin-top:2px">${m.sub}</div></div>`;});
+  }
+
+  // Heatmap
+  const hm=document.getElementById('prog-heatmap');
+  if(hm){hm.innerHTML='';
+    keys.forEach(({k,d,i},idx)=>{
+      const pct=pcts[idx];
+      const isToday=k===todayKey(),isFuture=d>new Date();
+      const bg=pct===null?'var(--surface)':pct<=40?'#1a2e1a':pct<=80?'#245e24':'#2a9a4a';
+      const bc=pct===null?'var(--border)':pct<=40?'#2a4a2a':pct<=80?'#3a8a3a':'#4ab86a';
+      const tc=isToday?'var(--gold)':pct!==null&&pct>60?'#c0f0a0':'var(--ink3)';
+      const wd=d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase();
+      const el=document.createElement('div');
+      el.style.cssText=`width:36px;height:36px;background:${bg};border:1px solid ${isFuture?'var(--border)':isToday?'var(--gold)':bc};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${isFuture?'default':'pointer'};border-radius:2px;gap:2px;opacity:${isFuture?0.3:1};transition:transform 0.1s`;
+      el.innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:${tc};line-height:1">${i+1}</span><span style="font-family:'DM Mono',monospace;font-size:0.42rem;color:${tc}">${wd}</span>`;
+      if(!isFuture)el.onclick=()=>showProgressDetail(k,i+1,d,pct);
+      el.onmouseover=()=>{if(!isFuture)el.style.transform='scale(1.08)';};
+      el.onmouseout=()=>{el.style.transform='scale(1)';};
+      hm.appendChild(el);
+    });
+  }
+
+  // Trend chart
+  const canvas=document.getElementById('trendChart');
+  if(canvas&&window.Chart){
+    if(window._trendChart)window._trendChart.destroy();
+    window._trendChart=new Chart(canvas,{
+      type:'line',
+      data:{labels:keys.map((_,i)=>`D${i+1}`),datasets:[{data:pcts,borderColor:'#4a9a6a',backgroundColor:'rgba(74,154,106,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4a9a6a',fill:true,tension:0.3,spanGaps:false}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:11},color:'#888',stepSize:25},grid:{color:'rgba(128,128,128,0.1)'},border:{display:false}},x:{ticks:{font:{size:11},color:'#888',autoSkip:false,maxRotation:0},grid:{display:false},border:{display:false}}}}
+    });
+  }
+}
+
+function showProgressDetail(key,dayNum,date,pct){
+  const checks=localChecks[key]||{};
+  const dateStr=date.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  const quality=pct===100?'Perfect day':pct>=70?'Strong day':pct>=50?'Solid day':pct>=30?'Partial day':'Needs work';
+  let rows='';
+  Object.entries(ANCHORS).forEach(([bucket,meta])=>{
+    const done=meta.items.filter(item=>checks[item.id]).length;
+    const p=Math.round((done/meta.items.length)*100);
+    rows+=`<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:1rem;width:20px;text-align:center">${meta.icon}</span>
+      <span style="font-family:'DM Mono',monospace;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink3);width:72px;flex-shrink:0">${meta.label}</span>
+      <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden"><div style="height:100%;width:${p}%;background:${meta.color};border-radius:3px"></div></div>
+      <span style="font-family:'DM Mono',monospace;font-size:0.6rem;color:var(--ink3);width:32px;text-align:right">${done}/${meta.items.length}</span>
+    </div>`;
+  });
+  document.getElementById('prog-detail').innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div><div style="font-family:'Fraunces',serif;font-size:1.1rem;font-weight:400">${dateStr}</div><div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);margin-top:4px">Day ${dayNum} · ${quality}</div></div>
+      <div style="font-family:'Fraunces',serif;font-size:2rem;font-weight:300;color:var(--green)">${pct??0}%</div>
+    </div>
+    <div>${rows}</div>
+  `;
+}
 function setSync(s){const el=document.getElementById('syncIndicator');if(!el)return;el.className='sync-indicator sync-'+s;el.textContent=s==='ok'?'● Synced':s==='err'?'● Offline':'○ Syncing';}
 function todayKey(){return new Date().toISOString().split('T')[0];}
 
@@ -390,7 +483,7 @@ async function initApp(){
   av.textContent=currentUser.initials;av.style.background=currentUser.color+'25';av.style.color=currentUser.color;
   document.getElementById('topbarName').textContent=currentUser.name;
   const pages=currentUser.isOwner?OWNER_PAGES:MEMBER_PAGES;
-  const labels={today:'Today',jpc:'JPC Tasks',vc:'VC Tasks',personal:'Personal',streak:'Sprint'};
+  const labels={today:'Today',jpc:'JPC Tasks',vc:'VC Tasks',personal:'Personal',progress:'Progress',streak:'Sprint'};
   const nav=document.getElementById('navTabs');nav.innerHTML='';
   pages.forEach((p,i)=>{const btn=document.createElement('button');btn.className='nav-tab'+(i===0?' active':'');btn.textContent=labels[p];btn.onclick=()=>showPage(p,btn);nav.appendChild(btn);});
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -629,7 +722,8 @@ function showPage(name,btn){
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');btn.classList.add('active');
   if(name==='streak')renderStreak();
-  if(name==='jpc'||name==='vc')loadAllData();
+  if(name==='progress')renderProgress();
+  if(name==='jpc'||name==='vc'||name==='today')loadAllData();
 }
 
 window.addEventListener('load',()=>{
@@ -637,5 +731,6 @@ window.addEventListener('load',()=>{
   initLogin();document.getElementById('loginScreen').style.display='flex';
 });
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
