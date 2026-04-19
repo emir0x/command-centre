@@ -265,6 +265,18 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font
     </table>
     <div id="personal-empty" class="empty-board" style="display:none">No personal tasks yet</div>
   </div>
+<div class="modal-overlay" id="dayEditModal" style="display:none" onclick="if(event.target===this) closeDayModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="dayModalTitle">Edit Day</span>
+      <button class="modal-close" onclick="closeDayModal()">×</button>
+    </div>
+    <div id="dayModalBuckets"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDayModal()">Close</button>
+    </div>
+  </div>
+</div>    
 </div>
 
 <div id="page-progress" class="page">
@@ -400,7 +412,7 @@ function renderProgress(){
       const el=document.createElement('div');
       el.style.cssText=`width:36px;height:36px;background:${bg};border:1px solid ${isFuture?'var(--border)':isToday?'var(--gold)':bc};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${isFuture?'default':'pointer'};border-radius:2px;gap:2px;opacity:${isFuture?0.3:1};transition:transform 0.1s`;
       el.innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:${tc};line-height:1">${i+1}</span><span style="font-family:'DM Mono',monospace;font-size:0.42rem;color:${tc}">${wd}</span>`;
-      if(!isFuture)el.onclick=()=>showProgressDetail(k,i+1,d,pct);
+      if(!isFuture)el.onclick=()=>openDayModal(k,i+1,d);
       el.onmouseover=()=>{if(!isFuture)el.style.transform='scale(1.08)';};
       el.onmouseout=()=>{el.style.transform='scale(1)';};
       hm.appendChild(el);
@@ -441,6 +453,51 @@ function showProgressDetail(key,dayNum,date,pct){
     </div>
     <div>${rows}</div>
   `;
+}
+function openDayModal(key, dayNum, date) {
+  const dateStr = date.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('dayModalTitle').textContent = `Day ${dayNum} · ${dateStr}`;
+  document.getElementById('dayEditModal').style.display = 'flex';
+  renderDayModalBuckets(key);
+}
+
+function renderDayModalBuckets(key) {
+  if (!localChecks[key]) localChecks[key] = {};
+  const checks = localChecks[key];
+  let html = '';
+  Object.entries(ANCHORS).forEach(([bucket, meta]) => {
+    html += `<div style="margin-bottom:20px;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink3);margin-bottom:10px;">${meta.icon} ${meta.label}</div>`;
+    meta.items.forEach(item => {
+      const isDone = !!checks[item.id];
+      html += `<div onclick="togglePastCheck('${key}','${item.id}',this)"
+        style="display:flex;align-items:center;gap:12px;padding:10px 14px;background:${isDone?'var(--surface2)':'var(--surface)'};border:1px solid var(--border);margin-bottom:3px;cursor:pointer;opacity:${isDone?0.6:1};transition:all 0.15s;"
+        data-done="${isDone}">
+        <div style="width:16px;height:16px;border:1.5px solid ${isDone?'var(--green)':'var(--border2)'};background:${isDone?'var(--green)':'transparent'};border-radius:2px;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+          ${isDone?'<svg viewBox="0 0 10 8" fill="none" width="9" height="9"><path d="M1 4l3 3 5-6" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':''}
+        </div>
+        <span style="font-size:0.82rem;color:var(--ink2);${isDone?'text-decoration:line-through;text-decoration-color:var(--ink3);':''}">${item.text}</span>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('dayModalBuckets').innerHTML = html;
+}
+
+async function togglePastCheck(key, checkId, el) {
+  if (!localChecks[key]) localChecks[key] = {};
+  localChecks[key][checkId] = !localChecks[key][checkId];
+  setSync('loading');
+  try {
+    await DB.upsert('daily_checks', {day_key:key, user_id:currentUser.id, check_id:checkId, done:localChecks[key][checkId]});
+    setSync('ok');
+  } catch(e) { console.error(e); setSync('err'); }
+  renderDayModalBuckets(key);
+  renderProgress();
+}
+
+function closeDayModal() {
+  document.getElementById('dayEditModal').style.display = 'none';
 }
 function setSync(s){const el=document.getElementById('syncIndicator');if(!el)return;el.className='sync-indicator sync-'+s;el.textContent=s==='ok'?'● Synced':s==='err'?'● Offline':'○ Syncing';}
 function todayKey(){return new Date().toISOString().split('T')[0];}
@@ -505,8 +562,11 @@ async function loadAllData(){
     tasks.personal=currentUser.isOwner?await DB.get('tasks',{type:'personal'}):[];
     if(currentUser.isOwner){
       const key=todayKey();
-      const rows=await DB.get('daily_checks',{day_key:key,user_id:currentUser.id});
-      localChecks[key]={};rows.forEach(r=>{localChecks[key][r.check_id]=r.done;});
+      const rows=await DB.get('daily_checks',{user_id:currentUser.id});
+rows.forEach(r=>{
+  if(!localChecks[r.day_key]) localChecks[r.day_key]={};
+  localChecks[r.day_key][r.check_id]=r.done;
+});
       const sr=await DB.get('streak');localStreak={};sr.forEach(r=>{localStreak[r.day_key]=r.complete;});
       renderToday();renderStreak();
     }
