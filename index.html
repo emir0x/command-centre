@@ -282,17 +282,6 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font
     <div style="font-size:0.78rem;color:var(--ink3);font-style:italic;">Tap a day above to see the breakdown</div>
   </div>
 </div>
-
-  <div id="page-streak" class="page">
-    <div class="board-title" style="margin-bottom:20px">21-Day <em>Sprint</em></div>
-    <div class="section">
-      <div class="section-hd"><div class="section-lbl">Day Completion — March 29 → April 18</div></div>
-      <div class="streak-grid" id="streakGrid"></div>
-      <p style="font-size:0.73rem;color:var(--ink3);line-height:1.6;">Days auto-complete when all daily anchors are ticked. Tap any past day to toggle manually.</p>
-    </div>
-    <div style="height:1px;background:var(--border);margin:24px 0;"></div>
-    <div class="section"><div class="section-lbl" style="margin-bottom:16px">Weekly Progress</div><div id="weekStats"></div></div>
-  </div>
 </div>
 
 <div class="modal-overlay" id="taskModal" style="display:none" onclick="if(event.target===this) closeModal()">
@@ -346,7 +335,6 @@ const USERS=[
 
 const OWNER_PAGES=['today','jpc','vc','personal','progress'];
 const MEMBER_PAGES=['jpc'];
-const SPRINT_START=new Date('2026-03-29');
 const ANCHORS={
   deen:{label:'Deen',icon:'🕌',color:'#4a9a6a',items:[{id:'d1',text:'1 sunnah prayer'},{id:'d2',text:'Learn new concept/fact'},{id:'d3',text:'1 page Quran + translation'},{id:'d4',text:'Morning adhkar (10 min)'}]},
   family:{label:'Family',icon:'👨‍👩‍👧',color:'#c9a84c',items:[{id:'f1',text:'Quality time with son (1hr)'},{id:'f2',text:'Present moment with wife'},{id:'f3',text:'Small gesture — flowers / dessert / words'}]},
@@ -376,7 +364,7 @@ const DB={
 
 async function hashPin(pin){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin));return[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 
-let currentUser=null,selectedId=null,localChecks={},localStreak={},tasks={jpc:[],vc:[],personal:[]};
+let currentUser=null,selectedId=null,localChecks={},tasks={jpc:[],vc:[],personal:[]};
 
 function renderProgress(){
   const TOTAL=Object.values(ANCHORS).reduce((s,b)=>s+b.items.length,0);
@@ -590,8 +578,7 @@ rows.forEach(r=>{
   if(!localChecks[r.day_key]) localChecks[r.day_key]={};
   localChecks[r.day_key][r.check_id]=r.done;
 });
-      const sr=await DB.get('streak');localStreak={};sr.forEach(r=>{localStreak[r.day_key]=r.complete;});
-      renderToday();renderStreak();
+      renderToday();
     }
     renderBoard('jpc');if(currentUser.isOwner){renderBoard('vc');renderBoard('personal');}
     setSync('ok');
@@ -624,7 +611,6 @@ function renderToday(){
     pill.innerHTML=`<span class="b-pill-icon">${meta.icon}</span><span class="b-pill-name">${meta.label}</span><div class="b-pill-bar"><div class="b-pill-fill" style="width:${p}%;background:${meta.color}"></div></div><span class="b-pill-frac" style="color:${meta.color}">${done}/${total}</span>`;
     row.appendChild(pill);
   });
-  if(doneAll===totalAll&&totalAll>0)saveStreak(todayKey(),true);
 }
 
 async function toggleCheck(bucket,id){
@@ -637,12 +623,6 @@ async function toggleCheck(bucket,id){
     if(progressPage&&progressPage.classList.contains('active'))renderProgress();
   }
   catch(e){console.error(e);setSync('err');}
-}
-
-async function saveStreak(dayKey,complete){
-  localStreak[dayKey]=complete;
-  try{await DB.upsert('streak',{day_key:dayKey,complete});}catch(e){console.error(e);}
-  renderStreak();
 }
 
 function renderBoard(type){
@@ -834,24 +814,6 @@ async function addComment(){
   task.comments.push({author:currentUser.id,text,time:Date.now()});
   input.value='';renderComments(task);setSync('loading');
   try{await DB.upsert('tasks',task);renderBoard(_mType);setSync('ok');}catch(e){console.error(e);setSync('err');}
-}
-
-function renderStreak(){
-  const today=todayKey();const grid=document.getElementById('streakGrid');if(!grid)return;grid.innerHTML='';
-  for(let i=0;i<21;i++){
-    const d=new Date(SPRINT_START);d.setDate(d.getDate()+i);const k=d.toISOString().split('T')[0];
-    const isToday=k===today,complete=localStreak[k],isPast=d<=new Date();
-    const el=document.createElement('div');el.className='s-day'+(complete?' complete':'')+(isToday?' today':'');
-    el.innerHTML=`<span class="s-day-num">${i+1}</span><span style="font-size:0.42rem">${d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase()}</span>`;
-    if(isPast&&!isToday)el.onclick=()=>saveStreak(k,!localStreak[k]);
-    grid.appendChild(el);
-  }
-  const ws=document.getElementById('weekStats');if(!ws)return;ws.innerHTML='';
-  for(let w=0;w<3;w++){
-    let done=0;for(let d=0;d<7;d++){const dt=new Date(SPRINT_START);dt.setDate(dt.getDate()+w*7+d);if(localStreak[dt.toISOString().split('T')[0]])done++;}
-    const pct=Math.round((done/7)*100);
-    ws.innerHTML+=`<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;margin-bottom:6px"><span style="font-family:'DM Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3)">Week ${w+1}</span><span style="font-family:'DM Mono',monospace;font-size:0.58rem;color:var(--gold)">${done}/7 days</span></div><div style="height:3px;background:var(--border);border-radius:1px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--green);border-radius:1px;transition:width 0.4s"></div></div></div>`;
-  }
 }
 
 function showPage(name,btn){
