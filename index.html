@@ -264,19 +264,7 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font
       <tbody id="personal-tbody"></tbody>
     </table>
     <div id="personal-empty" class="empty-board" style="display:none">No personal tasks yet</div>
-  </div>
-<div class="modal-overlay" id="dayEditModal" style="display:none" onclick="if(event.target===this) closeDayModal()">
-  <div class="modal">
-    <div class="modal-title">
-      <span id="dayModalTitle">Edit Day</span>
-      <button class="modal-close" onclick="closeDayModal()">×</button>
-    </div>
-    <div id="dayModalBuckets"></div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeDayModal()">Close</button>
-    </div>
-  </div>
-</div>    
+  </div>  
 </div>
 
 <div id="page-progress" class="page">
@@ -324,6 +312,19 @@ body{background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif;font
       <div class="comment-input-row"><input class="comment-input" id="commentInput" placeholder="Add a comment..." onkeydown="if(event.key==='Enter') addComment()"><button class="comment-send" onclick="addComment()">Send</button></div>
     </div>
     <div class="modal-actions"><button class="btn-cancel" onclick="closeModal()">Cancel</button><button class="btn-save" onclick="saveTask()">Save Task</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="dayEditModal" style="display:none" onclick="if(event.target===this) closeDayModal()">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="dayModalTitle">Edit Day</span>
+      <button class="modal-close" onclick="closeDayModal()">×</button>
+    </div>
+    <div id="dayModalBuckets"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeDayModal()">Close</button>
+    </div>
   </div>
 </div>
 
@@ -376,57 +377,79 @@ const DB={
 async function hashPin(pin){const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(pin));return[...new Uint8Array(buf)].map(x=>x.toString(16).padStart(2,'0')).join('');}
 
 let currentUser=null,selectedId=null,localChecks={},localStreak={},tasks={jpc:[],vc:[],personal:[]};
+
 function renderProgress(){
-  const TOTAL=14;
+  const TOTAL=Object.values(ANCHORS).reduce((s,b)=>s+b.items.length,0);
   const keys=[],pcts=[];
-  for(let i=0;i<21;i++){
-    const d=new Date(SPRINT_START);d.setDate(d.getDate()+i);
+  const today=new Date();
+  for(let i=29;i>=0;i--){
+    const d=new Date(today);d.setDate(d.getDate()-i);
     const k=d.toISOString().split('T')[0];
-    keys.push({k,d,i});
+    keys.push({k,d,dayNum:30-i});
     const checks=localChecks[k]||{};
     const done=Object.values(checks).filter(Boolean).length;
-    pcts.push(k<=todayKey()&&Object.keys(checks).length>0?Math.round((done/TOTAL)*100):null);
+    const hasData=Object.keys(checks).length>0;
+    pcts.push(hasData?Math.round((done/TOTAL)*100):null);
   }
 
-  // Summary cards
   const filled=pcts.filter(p=>p!==null);
   const avg=filled.length?Math.round(filled.reduce((a,b)=>a+b,0)/filled.length):0;
   const perfect=filled.filter(p=>p===100).length;
   let streak=0;for(let i=filled.length-1;i>=0;i--){if((filled[i]||0)>=50)streak++;else break;}
+
   const sr=document.getElementById('prog-summary');
   if(sr){sr.innerHTML='';
-    [{label:'Days tracked',value:filled.length,sub:'of 21'},{label:'Avg completion',value:avg+'%',sub:'across buckets'},{label:'Perfect days',value:perfect,sub:'100% complete'},{label:'Current streak',value:streak,sub:'days ≥50%'}]
+    [{label:'Days tracked',value:filled.length,sub:'of 30'},{label:'Avg completion',value:avg+'%',sub:'across buckets'},{label:'Perfect days',value:perfect,sub:'100% complete'},{label:'Current streak',value:streak,sub:'days ≥50%'}]
     .forEach(m=>{sr.innerHTML+=`<div style="background:var(--surface2);padding:14px;border:1px solid var(--border)"><div style="font-family:'DM Mono',monospace;font-size:0.52rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">${m.label}</div><div style="font-family:'Fraunces',serif;font-size:1.6rem;font-weight:300;color:var(--gold)">${m.value}</div><div style="font-size:0.7rem;color:var(--ink3);margin-top:2px">${m.sub}</div></div>`;});
   }
 
-  // Heatmap
   const hm=document.getElementById('prog-heatmap');
   if(hm){hm.innerHTML='';
-    keys.forEach(({k,d,i},idx)=>{
+    keys.forEach(({k,d},idx)=>{
       const pct=pcts[idx];
-      const isToday=k===todayKey(),isFuture=d>new Date();
+      const isToday=k===todayKey();
       const bg=pct===null?'var(--surface)':pct<=40?'#1a2e1a':pct<=80?'#245e24':'#2a9a4a';
       const bc=pct===null?'var(--border)':pct<=40?'#2a4a2a':pct<=80?'#3a8a3a':'#4ab86a';
       const tc=isToday?'var(--gold)':pct!==null&&pct>60?'#c0f0a0':'var(--ink3)';
       const wd=d.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase();
+      const dayLabel=d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
       const el=document.createElement('div');
-      el.style.cssText=`width:36px;height:36px;background:${bg};border:1px solid ${isFuture?'var(--border)':isToday?'var(--gold)':bc};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:${isFuture?'default':'pointer'};border-radius:2px;gap:2px;opacity:${isFuture?0.3:1};transition:transform 0.1s`;
-      el.innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:0.75rem;font-weight:700;color:${tc};line-height:1">${i+1}</span><span style="font-family:'DM Mono',monospace;font-size:0.42rem;color:${tc}">${wd}</span>`;
-      if(!isFuture)el.onclick=()=>openDayModal(k,i+1,d);
-      el.onmouseover=()=>{if(!isFuture)el.style.transform='scale(1.08)';};
-      el.onmouseout=()=>{el.style.transform='scale(1)';};
+      el.style.cssText=`width:40px;height:40px;background:${bg};border:1px solid ${isToday?'var(--gold)':bc};display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;border-radius:2px;gap:1px;transition:transform 0.1s;position:relative;`;
+      el.title=`${dayLabel} · ${pct!==null?pct+'%':'No data'}`;
+      el.innerHTML=`<span style="font-family:'DM Mono',monospace;font-size:0.62rem;font-weight:700;color:${tc};line-height:1">${d.getDate()}</span><span style="font-family:'DM Mono',monospace;font-size:0.38rem;color:${tc}">${wd}</span>`;
+      el.onclick=()=>openDayModal(k,dayLabel,d);
+      el.onmouseover=()=>el.style.transform='scale(1.08)';
+      el.onmouseout=()=>el.style.transform='scale(1)';
       hm.appendChild(el);
     });
   }
 
-  // Trend chart
   const canvas=document.getElementById('trendChart');
   if(canvas&&window.Chart){
     if(window._trendChart)window._trendChart.destroy();
     window._trendChart=new Chart(canvas,{
       type:'line',
-      data:{labels:keys.map((_,i)=>`D${i+1}`),datasets:[{data:pcts,borderColor:'#4a9a6a',backgroundColor:'rgba(74,154,106,0.08)',borderWidth:2,pointRadius:3,pointBackgroundColor:'#4a9a6a',fill:true,tension:0.3,spanGaps:false}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:11},color:'#888',stepSize:25},grid:{color:'rgba(128,128,128,0.1)'},border:{display:false}},x:{ticks:{font:{size:11},color:'#888',autoSkip:false,maxRotation:0},grid:{display:false},border:{display:false}}}}
+      data:{
+        labels:keys.map(({d})=>d.toLocaleDateString('en-GB',{day:'numeric',month:'short'})),
+        datasets:[{
+          data:pcts,
+          borderColor:'#4a9a6a',
+          backgroundColor:'rgba(74,154,106,0.08)',
+          borderWidth:2,
+          pointRadius:4,
+          pointBackgroundColor:keys.map(({k})=>k===todayKey()?'#c9a84c':'#4a9a6a'),
+          pointBorderColor:keys.map(({k})=>k===todayKey()?'#c9a84c':'#4a9a6a'),
+          fill:true,tension:0.3,spanGaps:false
+        }]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>v.raw!==null?v.raw+'%':'No data'}}},
+        scales:{
+          y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:11},color:'#888',stepSize:25},grid:{color:'rgba(128,128,128,0.1)'},border:{display:false}},
+          x:{ticks:{font:{size:10},color:'#888',maxRotation:45,autoSkip:true,maxTicksLimit:10},grid:{display:false},border:{display:false}}
+        }
+      }
     });
   }
 }
@@ -456,7 +479,7 @@ function showProgressDetail(key,dayNum,date,pct){
 }
 function openDayModal(key, dayNum, date) {
   const dateStr = date.toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long'});
-  document.getElementById('dayModalTitle').textContent = `Day ${dayNum} · ${dateStr}`;
+  document.getElementById('dayModalTitle').textContent = dateStr;
   document.getElementById('dayEditModal').style.display = 'flex';
   renderDayModalBuckets(key);
 }
